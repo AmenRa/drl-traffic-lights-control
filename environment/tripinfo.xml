@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on mer 13 feb 2019 12:38:13 CET by Eclipse SUMO GUI Version 1.1.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="environment/model.net.xml"/>
+        <route-files value="environment/model.rou.xml"/>
+    </input>
+
+    <output>
+        <tripinfo-output value="environment/tripinfo.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+    </time>
+
+    <traci_server>
+        <remote-port value="58997"/>
+    </traci_server>
+
+    <gui_only>
+        <gui-settings-file value="environment/model.gui.settings.xml"/>
+        <start value="true"/>
+    </gui_only>
+
+</configuration>
+-->
+
+<tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
+    <tripinfo id="S2E_3" depart="1.00" departLane="1_1_7-1_1_0_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="17.00" arrivalLane="1_1_0-1_1_5_0" arrivalPos="45.25" arrivalSpeed="11.79" duration="16.00" routeLength="90.40" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="9.04" rerouteNo="0" devices="tripinfo_S2E_3" vType="SUMO_DEFAULT_TYPE" speedFactor="1.08" vaporized=""/>
+    <tripinfo id="S2E_5" depart="5.00" departLane="1_1_7-1_1_0_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="21.00" arrivalLane="1_1_0-1_1_5_0" arrivalPos="45.25" arrivalSpeed="10.90" duration="16.00" routeLength="90.40" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="7.08" rerouteNo="0" devices="tripinfo_S2E_5" vType="SUMO_DEFAULT_TYPE" speedFactor="0.83" vaporized=""/>
+    <tripinfo id="N2E_1" depart="0.00" departLane="1_1_3-1_1_0_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="27.00" arrivalLane="1_1_0-1_1_5_0" arrivalPos="45.25" arrivalSpeed="8.57" duration="27.00" routeLength="95.72" waitingTime="5.00" waitingCount="1" stopTime="0.00" timeLoss="19.02" rerouteNo="0" devices="tripinfo_N2E_1" vType="SUMO_DEFAULT_TYPE" speedFactor="0.94" vaporized=""/>
+</tripinfos>
