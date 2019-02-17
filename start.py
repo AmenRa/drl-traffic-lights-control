@@ -5,7 +5,9 @@ from simulator import Simulator
 if __name__ == "__main__":
     epochs = 100;
     max_time_steps = 1000
-    sumocfg = "environment/model.sumocfg"
+    # sumocfg = "environment/model.sumocfg"
+    sumocfg = "environment/tlcs_config_test.sumocfg"
+    # sumocfg = "environment/tlcs_config_train.sumocfg"
     tripinfo = "environment/tripinfo.xml"
     gui = False
 
@@ -25,19 +27,3 @@ if __name__ == "__main__":
     sim = Simulator(sumocfg, tripinfo)
     # Run simulator
     sim.run(gui, max_time_steps)
-
-
-
-# nnneeessswww
-#
-# GGgrrrGGgrrr
-
-
-# "GGg rrr GGg rrr"
-# almeno 4 sec "yyg rrr yyg rrr"
-# "rrG rrr rrG rrr"
-# almeno 4 sec "rry rrr rry rrr"
-# "rrr GGg rrr GGg"
-# almeno 4 sec "rrr yyg rrr yyg"
-# "rrr rrG rrr rrG"
-# almeno 4 sec "rrr rry rrr rry"

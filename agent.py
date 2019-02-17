@@ -21,7 +21,8 @@ class DQNAgent:
         # exploration rate
         self.epsilon = epsilon
 
-        self.memory = deque(maxlen=memory_size) # Number of experiences the Memory can keep
+        # Number of experiences the Memory can keep
+        self.memory = deque(maxlen=memory_size)
 
         self.optimizer
         self.loss_function
@@ -29,33 +30,73 @@ class DQNAgent:
 
         self.model = self.build_model()
 
-        # # Exploration parameters for epsilon greedy strategy
-        # # exploration probability at start
-        # self.explore_start = 1.0
-        # # minimum exploration probability
-        # self.explore_stop = 0.01
-        # # exponential decay rate for exploration prob
-        # self.decay_rate = 0.0001
-
     def build_model(self):
-        """
-        NETWORK ARCHITECTURE GOES HERE
-        """
+        # Create a sequntial model (a sequential model is a linear stack of layers)
+        model = Sequential([
+            Dense(1000, input_dim=self.state_size),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+            Dense(1000),
+            Activation('relu'),
+        ])
 
-    def train_batch(self, ...):
-        """
-        TRAIN STEP
-        """
+        sgd = optimizers.SGD(lr=self.learning_rate)
+
+        model.compile(
+            optimizer=sgd,
+            loss='mse',
+            metrics=['accuracy']
+        )
+
+        return model
 
     def act(self, state):
-        """
-        RETURN ACTION
-        """
+        # np.random.rand() = random sample from a uniform distribution over [0, 1)
+        if np.random.rand() <= self.epsilon:
+            return random.randrange(self.action_size)
+        act_values = self.model.predict(state)
+
+    def remember(self, state, action, reward, next_state):
+        self.memory.append((state, action, reward, next_state))
 
     def replay(self, batch_size):
-        """
-        REPLAY IMPLEMENTATION GOES HERE
-        """
+        # Sample from memory
+        minibatch = random.sample(self.memory, batch_size)
+
+        # Divide minibatch items' properties
+        states = [item[0] for item in minibatch]
+        actions = [item[1] for item in minibatch]
+        next_states = [item[2] for item in minibatch]
+        rewards = [item[3] for item in minibatch]
+
+        # Predict the Q-value for each actions of each state
+        currents_q_values = self.model.predict(x = states, batch_size)
+        # Predict the Q-value for each actions of each next state
+        next_states_q_values = self.model.predict(x = next_states, batch_size)
+
+        # Update the Q-value of the choosen action for each state
+        for current_q_values, action, reward, next_state_q_values in zip(currents_q_values, actions, rewards, next_states_q_values):
+            current_q_values[action] = reward + self.gamma * np.amax(next_state_q_values)
+
+        # Set input and output data
+        x = np.array([state for state in states])
+        y = currents_q_values
+
+        # Train the NN
+        self.model.fit(x, y, epochs=1, verbose=0)
 
     def load(self, name):
         self.model.load_weights(name)
