@@ -15,6 +15,19 @@ from sumolib import checkBinary  # Checks for the binary in environ vars
 import traci
 import traci.constants as tc
 
+GREEN_PHASE_SEC = 10 # duration of green phase
+YELLOW_PHASE_SEC = 4 # duration of yellow phase
+
+# phase codes based on xai_tlcs.net.xml
+PHASE_NS_GREEN = 0 # action 0 code 00
+PHASE_NS_YELLOW = 1
+PHASE_NSL_GREEN = 2 # action 1 code 01
+PHASE_NSL_YELLOW = 3
+PHASE_EW_GREEN = 4 # action 2 code 10
+PHASE_EW_YELLOW = 5
+PHASE_EWL_GREEN = 6 # action 3 code 11
+PHASE_EWL_YELLOW = 7
+
 class SubscriptionListener(traci.StepListener):
     def __init__(self, junctionID):
         self.junctionID = junctionID
@@ -71,6 +84,9 @@ class Simulator:
     def __init__(self, sumocfg, tripinfo):
         self.sumocfg = sumocfg
         self.tripinfo = tripinfo
+
+    # def calculate_reward:
+
 
     # contains TraCI control loop
     def run(self, gui = False, max_time_steps = 100):

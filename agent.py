@@ -6,8 +6,23 @@ from collections import deque
 from keras.layers import Input, Conv2D, Flatten, Dense
 from keras.models import Model
 
+'''
+learning_rate            Learning rate
+gamma                    Discounting rate
+
+Exploration parameters
+
+epsilon                  Exploration rate
+max_epsilon              Exploration probability at start
+min_epsilon              Minimum exploration probability
+decay_rate               Exponential decay rate for exploration prob
+
+# Reduce epsilon (because we need less and less exploration)
+epsilon = min_epsilon + (max_epsilon - min_epsilon)*np.exp(-decay_rate*episode)
+'''
+
 class DQNAgent:
-    def __init__(self, state_size, action_size, learning_rate = 0.0002, gamma = 0.95, epsilon = 0.1, memory_size = 200, name='DQNAgent'):
+    def __init__(self, state_size, action_size, learning_rate = 0.0002, gamma = 0.95, epsilon = 1.0, max_espilon = 1.0, min_epsilon = 0.01, decay_rate = 0.01, memory_size = 200, name='DQNAgent'):
         # Model hyperparameters
         self.state_size = state_size
         self.action_size = action_size
@@ -24,9 +39,9 @@ class DQNAgent:
         # Number of experiences the Memory can keep
         self.memory = deque(maxlen=memory_size)
 
-        self.optimizer
-        self.loss_function
-        self.variable_initializer
+        # self.optimizer
+        # self.loss_function
+        # self.variable_initializer
 
         self.model = self.build_model()
 
