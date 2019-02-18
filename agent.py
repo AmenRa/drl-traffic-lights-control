@@ -7,45 +7,43 @@ from keras.layers import Input, Conv2D, Flatten, Dense
 from keras.models import Model
 
 '''
-learning_rate            Learning rate
-gamma                    Discounting rate
-
-Exploration parameters
-
-epsilon                  Exploration rate
-max_epsilon              Exploration probability at start
-min_epsilon              Minimum exploration probability
-decay_rate               Exponential decay rate for exploration prob
+state_size                  Size of the input
+action_size                 Size of the output
+memory_size                 Size of the memory
+gamma                       Discounting reward rate
+epsilon                     Exploration rate
+epsilon_decay_rate          Decay rate for exploration probability
+epsilon_min                 Minimum exploration probability
+learning_rate               Learning rate
+name                        The name used to save the model
 
 # Reduce epsilon (because we need less and less exploration)
-epsilon = min_epsilon + (max_epsilon - min_epsilon)*np.exp(-decay_rate*episode)
+epsilon = min_epsilon + (max_epsilon - min_epsilon)*np.exp(-epsilon_decay_rate*episode)
 '''
 
 class DQNAgent:
-    def __init__(self, state_size, action_size, learning_rate = 0.0002, gamma = 0.95, epsilon = 1.0, max_espilon = 1.0, min_epsilon = 0.01, decay_rate = 0.01, memory_size = 200, name='DQNAgent'):
-        # Model hyperparameters
+
+    def __init__(self, state_size, action_size, memory_size=200, gamma=0.95, epsilon=1.0, epsilon_decay_rate=0.995, epsilon_min=0.01, learning_rate=0.0002, name='DQNAgent'):
         self.state_size = state_size
         self.action_size = action_size
-
-        # Training hyperparameters
-        self.learning_rate = learning_rate
-
-        # Q learning hyperparameters
-        # discount rate
-        self.gamma = gamma
-        # exploration rate
-        self.epsilon = epsilon
-
-        # Number of experiences the Memory can keep
         self.memory = deque(maxlen=memory_size)
+        self.gamma = gamma
+        self.epsilon = epsilon
+        self.epsilon_decay_rate = epsilon_decay_rate
+        self.epsilon_min = epsilon_min
+        self.learning_rate = learning_rate
+        self.model = self._build_model()
 
-        # self.optimizer
-        # self.loss_function
-        # self.variable_initializer
+    # Declare the model architecture and build the model
+    def _build_model(self):
+        # model = Sequential()
+        #
+        # model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        # model.add(Dense24, activation='relu')
+        # model.add(Dense(self.action_size, activation='linear'))
+        #
+        # model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
 
-        self.model = self.build_model()
-
-    def build_model(self):
         # Create a sequntial model (a sequential model is a linear stack of layers)
         model = Sequential([
             Dense(1000, input_dim=self.state_size),
@@ -78,15 +76,19 @@ class DQNAgent:
 
         return model
 
+    # Choose an action
     def act(self, state):
         # np.random.rand() = random sample from a uniform distribution over [0, 1)
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
-        act_values = self.model.predict(state)
+        action_q_values = self.model.predict(state)
+        return np.argmax(action_q_values[0])
 
-    def remember(self, state, action, reward, next_state):
-        self.memory.append((state, action, reward, next_state))
+    # Save a sample into memory
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
 
+    # The learning happens here
     def replay(self, batch_size):
         # Sample from memory
         minibatch = random.sample(self.memory, batch_size)
@@ -113,8 +115,10 @@ class DQNAgent:
         # Train the NN
         self.model.fit(x, y, epochs=1, verbose=0)
 
+    # Load a pre-trained model
     def load(self, name):
         self.model.load_weights(name)
 
+    # Load save the current model
     def save(self, name):
         self.model.save_weights(name)
