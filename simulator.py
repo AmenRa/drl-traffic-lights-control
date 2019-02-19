@@ -117,8 +117,8 @@ class Simulator:
         state = np.reshape(state, [1, self.state_size])
         return state, total_waiting_time, intersection_queue, vehicles_arrived
 
-    def get_reward(self, previous_waiting_time, current_waiting_time):
-        return previous_waiting_time - current_waiting_time
+    def get_reward(self, vehicles_arrived, current_waiting_time):
+        return vehicles_arrived - current_waiting_time
 
     def is_done(self, step, max_steps):
         return step < max_steps - 1
@@ -162,22 +162,27 @@ class Simulator:
         previous_action = None
 
         for step in range(max_steps):
-            # Reset yellow phase
-            if yellow_phase_step_count == YELLOW_PHASE_DURATION:
-                yellow_phase = False
-                yellow_phase_step_count = 0
-
-            # Reset green phase
-            if green_phase_step_count == GREEN_PHASE_DURATION:
-                green_phase = False
-                green_phase_step_count = 0
+            # print(step)
 
             # Let the agent change tls
             if not yellow_phase and not green_phase:
+                # print('action')
                 # Store previous action
                 previous_action = action
                 # Choose action
                 action = self.agent.act(state)
+
+            # Start yellow phase
+            if not green_phase and not yellow_phase and action != previous_action and previous_action is not None:
+                yellow_phase = True
+                # print('start yellow phase')
+                # yellow phase number based on previous action
+                traci.trafficlight.setPhase("TL", previous_action * 2 + 1)
+
+            # Execute action
+            if not green_phase and not yellow_phase:
+                # print('start green phase')
+                green_phase = True
                 if action == 0:
                     traci.trafficlight.setPhase("TL", PHASE_NS_GREEN)
                 elif action == 1:
@@ -189,32 +194,38 @@ class Simulator:
 
             # Update yellow phase counter
             if yellow_phase:
+                # print('update yellow phase counter')
                 yellow_phase_step_count += 1
+
+            # Reset yellow phase
+            if yellow_phase_step_count == YELLOW_PHASE_DURATION:
+                # print('reset yellow phase count')
+                yellow_phase = False
+                yellow_phase_step_count = 0
+
             # Update green phase counter
             if green_phase:
+                # print('update green phase counter')
                 green_phase_step_count += 1
 
-            # Start yellow phase
-            if action != previous_action and previous_action is not None:
-                yellow_phase = True
-                # yellow phase number based on previous action
-                traci.trafficlight.setPhase("TL", previous_action * 2 + 1)
-            # Start green phase
-            else:
-                green_phase = True
+            # Reset green phase
+            if green_phase_step_count == GREEN_PHASE_DURATION:
+                # print('reset green phase count')
+                green_phase = False
+                green_phase_step_count = 0
 
             traci.simulationStep(step)
 
-            if green_phase == True and (green_phase_step_count in (0, GREEN_PHASE_DURATION)):
+            if green_phase == True and (green_phase_step_count in (1, GREEN_PHASE_DURATION)):
+                # print('do things')
                 next_state, current_waiting_time, intersection_queue, vehicles_arrived = self.get_state(junction_id)
-                reward = self.get_reward(previous_waiting_time, current_waiting_time)
+                reward = self.get_reward(vehicles_arrived, current_waiting_time)
                 done = self.is_done(step, max_steps)
                 # Feed agent memory
                 self.agent.remember(state, action, reward, next_state, done)
 
                 # Update
                 state = next_state
-                previous_waiting_time = current_waiting_time
                 cumulative_reward += reward
                 cumulative_waiting_time += current_waiting_time
                 throughput += vehicles_arrived

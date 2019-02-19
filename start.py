@@ -14,8 +14,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 # main entry point
 if __name__ == "__main__":
-    EPISODES = 100
-    MAX_STEPS = 5400
+    EPISODES = 1000
+    MAX_STEPS = 3600
     # sumocfg = "environment/model.sumocfg"
     SUMOCFG = "environment/tlcs_config_test.sumocfg"
     # sumocfg = "environment/tlcs_config_train.sumocfg"
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     MEMORY_SIZE = 200
     GAMMA = 0.95
     EPSILON = 1.0
-    EPSILON_DECAY_RATE = 0.9999
+    EPSILON_DECAY_RATE = 0.99999
     EPSILON_MIN = 0.01
     LEARNING_RATE = 0.0002
     NAME = 'DQNAgent'
@@ -73,6 +73,7 @@ if __name__ == "__main__":
         print("----- Elapsed time: ", elapsed_time, " seconds -----")
         print('********************')
 
+    AGENT.save()
     del AGENT
     gc.collect()
 
