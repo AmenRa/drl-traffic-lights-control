@@ -1,10 +1,9 @@
 import random
-import numpy as np
-import keras
-import h5py
 from collections import deque
-from keras.layers import Input, Conv2D, Flatten, Dense
-from keras.models import Model
+import numpy as np
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import SGD
 
 '''
 state_size                  Size of the input
@@ -32,49 +31,30 @@ class DQNAgent:
         self.epsilon_decay_rate = epsilon_decay_rate
         self.epsilon_min = epsilon_min
         self.learning_rate = learning_rate
+        self.name = name
         self.model = self._build_model()
 
     # Declare the model architecture and build the model
     def _build_model(self):
-        # model = Sequential()
-        #
-        # model.add(Dense(24, input_dim=self.state_size, activation='relu'))
-        # model.add(Dense24, activation='relu')
-        # model.add(Dense(self.action_size, activation='linear'))
-        #
-        # model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
-
         # Create a sequntial model (a sequential model is a linear stack of layers)
-        model = Sequential([
-            Dense(1000, input_dim=self.state_size),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-            Dense(1000),
-            Activation('relu'),
-        ])
+        model = Sequential()
 
-        sgd = optimizers.SGD(lr=self.learning_rate)
+        model.add(Dense(64, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(32, activation='relu'))
+        model.add(Dense(16, activation='relu'))
+        model.add(Dense(self.action_size, activation='linear'))
 
         model.compile(
-            optimizer=sgd,
+            optimizer=SGD(lr=self.learning_rate),
             loss='mse',
             metrics=['accuracy']
         )
 
         return model
+
+    # Save a sample into memory
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
 
     # Choose an action
     def act(self, state):
@@ -84,41 +64,49 @@ class DQNAgent:
         action_q_values = self.model.predict(state)
         return np.argmax(action_q_values[0])
 
-    # Save a sample into memory
-    def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
-
     # The learning happens here
     def replay(self, batch_size):
-        # Sample from memory
         minibatch = random.sample(self.memory, batch_size)
-
-        # Divide minibatch items' properties
-        states = [item[0] for item in minibatch]
-        actions = [item[1] for item in minibatch]
-        next_states = [item[2] for item in minibatch]
-        rewards = [item[3] for item in minibatch]
-
-        # Predict the Q-value for each actions of each state
-        currents_q_values = self.model.predict(x = states, batch_size)
-        # Predict the Q-value for each actions of each next state
-        next_states_q_values = self.model.predict(x = next_states, batch_size)
-
-        # Update the Q-value of the choosen action for each state
-        for current_q_values, action, reward, next_state_q_values in zip(currents_q_values, actions, rewards, next_states_q_values):
-            current_q_values[action] = reward + self.gamma * np.amax(next_state_q_values)
-
-        # Set input and output data
-        x = np.array([state for state in states])
-        y = currents_q_values
-
-        # Train the NN
-        self.model.fit(x, y, epochs=1, verbose=0)
+        for state, action, reward, next_state, done in minibatch:
+            target = reward
+            if not done:
+                target = reward + self.gamma * np.amax(self.model.predict(next_state, batch_size=1)[0])
+            target_f = self.model.predict(state, batch_size=1)
+            target_f[0][action] = target
+            self.model.fit(state, target_f, epochs=1, verbose=0)
+        # Decrease epsilon
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay_rate
+        # # Sample from memory
+        # minibatch = random.sample(self.memory, batch_size)
+        #
+        # # Divide minibatch items' properties
+        # states = [item[0] for item in minibatch]
+        # actions = [item[1] for item in minibatch]
+        # next_states = [item[2] for item in minibatch]
+        # rewards = [item[3] for item in minibatch]
+        #
+        # # Predict the Q-value for each actions of each state
+        # currents_q_values = self.model.predict(x=states, batch_size=batch_size)
+        # # Predict the Q-value for each actions of each next state
+        # next_states_q_values = self.model.predict(x=next_states, batch_size=batch_size)
+        #
+        # # Update the Q-value of the choosen action for each state
+        # for current_q_values, action, reward, next_state_q_values in zip(currents_q_values, actions, rewards, next_states_q_values):
+        #     current_q_values[action] = reward + self.gamma * np.amax(next_state_q_values)
+        #
+        # # Train the NN
+        # self.model.fit(
+        #     x=np.array([state for state in states]),
+        #     y=currents_q_values,
+        #     epochs=1,
+        #     verbose=0
+        # )
 
     # Load a pre-trained model
-    def load(self, name):
-        self.model.load_weights(name)
+    def load(self):
+        self.model.load_weights(self.name)
 
     # Load save the current model
-    def save(self, name):
-        self.model.save_weights(name)
+    def save(self):
+        self.model.save_weights(self.name)

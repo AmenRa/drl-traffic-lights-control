@@ -3,8 +3,8 @@ import os
 import random
 import numpy as np
 from collections import deque
-import keras.model import Sequential
-import keras.layer import Dense
+from keras.models import Sequential
+from keras.layers import Dense
 from keras.optimizers import Adam
 
 class DQNAgent:
@@ -25,7 +25,7 @@ class DQNAgent:
         model = Sequential()
 
         model.add(Dense(24, input_dim=self.state_size, activation='relu'))
-        model.add(Dense24, activation='relu')
+        model.add(Dense(24, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
 
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
@@ -41,7 +41,7 @@ class DQNAgent:
 
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
-        for state, action reward, next_state, done in minibatch:
+        for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
                 target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
@@ -49,7 +49,7 @@ class DQNAgent:
             target_f[0][action] = target
             self.model.fit(state, target_f, epochs=1, verbose=0)
         # Decrease epsilon
-        if self.epsilon > epsilon_min:
+        if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay_rate
 
     def load(self, name):
