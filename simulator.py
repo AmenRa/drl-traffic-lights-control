@@ -1,6 +1,11 @@
 import os
 import sys
+# This module exports a set of functions implemented in C corresponding to the intrinsic operators of Python. For example, operator.add(x, y) is equivalent to the expression x+y. The function names are those used for special methods; variants without leading and trailing '__' are also provided for convenience.
+import operator
+from functools import reduce
 import numpy as np
+
+import time
 
 # Import some Python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -31,6 +36,77 @@ PHASE_EW_YELLOW = 5
 PHASE_EWL_GREEN = 6 # action 3 code 11
 PHASE_EWL_YELLOW = 7
 
+def compute_queue_and_total_waiting_time(vehicle):
+    in_queue = False
+    waiting_time = vehicle[1][122]
+    # Lane position
+    lane_pos = vehicle[1][86]
+    # Lane ID
+    lane_id = vehicle[1][81]
+    # Lanes are 750m long, this calculate the distance from the tls
+    distance_from_tls = 750 - lane_pos
+    # Lane griup initialization
+    lane_group = -1
+    # Flag to leave out vehicles crossing the intersection or driving away from it
+    valid_car = False
+
+    # distance in meters from the TLS -> mapping into cells
+    if distance_from_tls < 7:
+        lane_cell = 0
+    elif distance_from_tls < 14:
+        lane_cell = 1
+    elif distance_from_tls < 21:
+        lane_cell = 2
+    elif distance_from_tls < 28:
+        lane_cell = 3
+    elif distance_from_tls < 40:
+        lane_cell = 4
+    elif distance_from_tls < 60:
+        lane_cell = 5
+    elif distance_from_tls < 100:
+        lane_cell = 6
+    elif distance_from_tls < 160:
+        lane_cell = 7
+    elif distance_from_tls < 400:
+        lane_cell = 8
+    elif distance_from_tls <= 750:
+        lane_cell = 9
+
+    # In which lane is the car? _3 are the "turn left only" lanes
+    if lane_id in ('W2TL_0', 'W2TL_1', 'W2TL_2'):
+        lane_group = 0
+    elif lane_id == 'W2TL_3':
+        lane_group = 1
+    elif lane_id in ('N2TL_0', 'N2TL_1', 'N2TL_2'):
+        lane_group = 2
+    elif lane_id == 'N2TL_3':
+        lane_group = 3
+    elif lane_id in ('E2TL_0', 'E2TL_1', 'E2TL_2'):
+        lane_group = 4
+    elif lane_id == 'E2TL_3':
+        lane_group = 5
+    elif lane_id in ('S2TL_0', 'S2TL_1', 'S2TL_2'):
+        lane_group = 6
+    elif lane_id == 'S2TL_3':
+        lane_group = 7
+
+    if 1 <= lane_group <= 7:
+        # composition of the two postion ID to create a number in interval 0-79
+        vehicle_position = int(str(lane_group) + str(lane_cell))
+        valid_car = True
+    elif lane_group == 0:
+        vehicle_position = lane_cell
+        valid_car = True
+    else:
+        vehicle_position = -1
+
+    if valid_car:
+        # Heuristic to capture with precision when a car is really in queue
+        if vehicle[1][122] > 0.5:
+            in_queue = True
+
+    return in_queue, waiting_time, vehicle_position
+
 class Simulator:
     def __init__(self, sumocfg, tripinfo, state_size, agent):
         self.sumocfg = sumocfg
@@ -40,6 +116,7 @@ class Simulator:
 
     def get_state(self, junction_id):
         subscription_results = traci.junction.getContextSubscriptionResults(junction_id)
+
         total_waiting_time = 0
         state = np.zeros(self.state_size)
         intersection_queue = 0
@@ -47,83 +124,95 @@ class Simulator:
         vehicles_arrived = traci.simulation.getArrivedNumber()
 
         if subscription_results is not None:
-            for vehicle in subscription_results.items():
-                total_waiting_time += vehicle[1][122]
-                # heuristic to capture with precision when a car is really in queue
-                if vehicle[1][122] > 0.5:
-                    intersection_queue += 1
-                lane_pos = vehicle[1][86]
-                lane_id = vehicle[1][81]
-                # inversion of lane so if it is close to TL, lane_pos = 0
-                lane_pos = 750 - lane_pos
-                # just dummy initialization
-                lane_group = -1
-                # flag for not detecting cars crossing the intersection or driving away from it
-                valid_car = False
+            # for vehicle in subscription_results.items():
+            #     # Lane position
+            #     lane_pos = vehicle[1][86]
+            #     # Lane ID
+            #     lane_id = vehicle[1][81]
+            #     # Lanes are 750m long, this calculate the distance from the tls
+            #     distance_from_tls = 750 - lane_pos
+            #     # Lane griup initialization
+            #     lane_group = -1
+            #     # Flag to leave out vehicles crossing the intersection or driving away from it
+            #     valid_car = False
+            #
+            #     # distance in meters from the TLS -> mapping into cells
+            #     if distance_from_tls < 7:
+            #         lane_cell = 0
+            #     elif distance_from_tls < 14:
+            #         lane_cell = 1
+            #     elif distance_from_tls < 21:
+            #         lane_cell = 2
+            #     elif distance_from_tls < 28:
+            #         lane_cell = 3
+            #     elif distance_from_tls < 40:
+            #         lane_cell = 4
+            #     elif distance_from_tls < 60:
+            #         lane_cell = 5
+            #     elif distance_from_tls < 100:
+            #         lane_cell = 6
+            #     elif distance_from_tls < 160:
+            #         lane_cell = 7
+            #     elif distance_from_tls < 400:
+            #         lane_cell = 8
+            #     elif distance_from_tls <= 750:
+            #         lane_cell = 9
+            #
+            #     # In which lane is the car? _3 are the "turn left only" lanes
+            #     if lane_id in ('W2TL_0', 'W2TL_1', 'W2TL_2'):
+            #         lane_group = 0
+            #     elif lane_id == 'W2TL_3':
+            #         lane_group = 1
+            #     elif lane_id in ('N2TL_0', 'N2TL_1', 'N2TL_2'):
+            #         lane_group = 2
+            #     elif lane_id == 'N2TL_3':
+            #         lane_group = 3
+            #     elif lane_id in ('E2TL_0', 'E2TL_1', 'E2TL_2'):
+            #         lane_group = 4
+            #     elif lane_id == 'E2TL_3':
+            #         lane_group = 5
+            #     elif lane_id in ('S2TL_0', 'S2TL_1', 'S2TL_2'):
+            #         lane_group = 6
+            #     elif lane_id == 'S2TL_3':
+            #         lane_group = 7
+            #
+            #     if 1 <= lane_group <= 7:
+            #         # composition of the two postion ID to create a number in interval 0-79
+            #         veh_position = int(str(lane_group) + str(lane_cell))
+            #         valid_car = True
+            #     elif lane_group == 0:
+            #         veh_position = lane_cell
+            #         valid_car = True
+            #
+            #     if valid_car:
+            #         # Write the position of the car veh_id in the state array
+            #         state[veh_position] = 1
+            #         # Heuristic to capture with precision when a car is really in queue
+            #         if vehicle[1][122] > 0.5:
+            #             intersection_queue += 1
+            #             total_waiting_time += vehicle[1][122]
 
-                # distance in meters from the TLS -> mapping into cells
-                if lane_pos < 7:
-                    lane_cell = 0
-                elif lane_pos < 14:
-                    lane_cell = 1
-                elif lane_pos < 21:
-                    lane_cell = 2
-                elif lane_pos < 28:
-                    lane_cell = 3
-                elif lane_pos < 40:
-                    lane_cell = 4
-                elif lane_pos < 60:
-                    lane_cell = 5
-                elif lane_pos < 100:
-                    lane_cell = 6
-                elif lane_pos < 160:
-                    lane_cell = 7
-                elif lane_pos < 400:
-                    lane_cell = 8
-                elif lane_pos <= 750:
-                    lane_cell = 9
+            in_queues, waiting_times, vehicle_positions = zip(*map(compute_queue_and_total_waiting_time, subscription_results.items()))
 
-                # in which lane is the car? _3 are the "turn left only" lanes
-                if lane_id in ('W2TL_0', 'W2TL_1', 'W2TL_2'):
-                    lane_group = 0
-                elif lane_id == 'W2TL_3':
-                    lane_group = 1
-                elif lane_id in ('N2TL_0', 'N2TL_1', 'N2TL_2'):
-                    lane_group = 2
-                elif lane_id == 'N2TL_3':
-                    lane_group = 3
-                elif lane_id in ('E2TL_0', 'E2TL_1', 'E2TL_2'):
-                    lane_group = 4
-                elif lane_id == 'E2TL_3':
-                    lane_group = 5
-                elif lane_id in ('S2TL_0', 'S2TL_1', 'S2TL_2'):
-                    lane_group = 6
-                elif lane_id == 'S2TL_3':
-                    lane_group = 7
-
-                if 1 <= lane_group <= 7:
-                    # composition of the two postion ID to create a number in interval 0-79
-                    veh_position = int(str(lane_group) + str(lane_cell))
-                    valid_car = True
-                elif lane_group == 0:
-                    veh_position = lane_cell
-                    valid_car = True
-
-                if valid_car:
-                    # write the position of the car veh_id in the state array
-                    state[veh_position] = 1
+            total_waiting_time = reduce(operator.add, waiting_times)
+            intersection_queue = reduce(operator.add, in_queues)
+            # for vehicle_position in vehicle_positions:
+            #     if vehicle_position > -1:
+            #         state[vehicle_position] = 1
 
         # Transpose the state in order to feed it into the NN
         state = np.reshape(state, [1, self.state_size])
         return state, total_waiting_time, intersection_queue, vehicles_arrived
 
+    # Calculate reward
     def get_reward(self, vehicles_arrived, current_waiting_time):
         return vehicles_arrived - current_waiting_time
 
+    # Check if the episode is finished (not very useful here, but often used in Reinforcement Learning tasks)
     def is_done(self, step, max_steps):
         return step < max_steps - 1
 
-    # contains TraCI control loop
+    # Run simulation (TraCI/SUMO)
     def run(self, gui=False, max_steps=100, batch_size=32):
         # Control SUMO mode (with or without GUI)
         if gui:
@@ -164,76 +253,71 @@ class Simulator:
         for step in range(max_steps):
             # print(step)
 
-            # Let the agent change tls
-            if not yellow_phase and not green_phase:
-                # print('action')
+            # Choose action and (start yellow phase or execute action)
+            if not green_phase and not yellow_phase:
+                # Let the agent choose action
                 # Store previous action
                 previous_action = action
                 # Choose action
                 action = self.agent.act(state)
+                # Start yellow phase
+                if action != previous_action and previous_action is not None:
+                    yellow_phase = True
+                    # print('start yellow phase')
+                    # yellow phase number based on previous action
+                    traci.trafficlight.setPhase("TL", previous_action * 2 + 1)
+                # Execute action
+                else:
+                    # print('start green phase')
+                    green_phase = True
+                    if action == 0:
+                        traci.trafficlight.setPhase("TL", PHASE_NS_GREEN)
+                    elif action == 1:
+                        traci.trafficlight.setPhase("TL", PHASE_NSL_GREEN)
+                    elif action == 2:
+                        traci.trafficlight.setPhase("TL", PHASE_EW_GREEN)
+                    elif action == 3:
+                        traci.trafficlight.setPhase("TL", PHASE_EWL_GREEN)
 
-            # Start yellow phase
-            if not green_phase and not yellow_phase and action != previous_action and previous_action is not None:
-                yellow_phase = True
-                # print('start yellow phase')
-                # yellow phase number based on previous action
-                traci.trafficlight.setPhase("TL", previous_action * 2 + 1)
-
-            # Execute action
-            if not green_phase and not yellow_phase:
-                # print('start green phase')
-                green_phase = True
-                if action == 0:
-                    traci.trafficlight.setPhase("TL", PHASE_NS_GREEN)
-                elif action == 1:
-                    traci.trafficlight.setPhase("TL", PHASE_NSL_GREEN)
-                elif action == 2:
-                    traci.trafficlight.setPhase("TL", PHASE_EW_GREEN)
-                elif action == 3:
-                    traci.trafficlight.setPhase("TL", PHASE_EWL_GREEN)
+            # Do step
+            traci.simulationStep(step)
 
             # Update yellow phase counter
             if yellow_phase:
                 # print('update yellow phase counter')
                 yellow_phase_step_count += 1
-
-            # Reset yellow phase
-            if yellow_phase_step_count == YELLOW_PHASE_DURATION:
-                # print('reset yellow phase count')
-                yellow_phase = False
-                yellow_phase_step_count = 0
-
+                # Reset yellow phase
+                if yellow_phase_step_count == YELLOW_PHASE_DURATION:
+                    # print('reset yellow phase count')
+                    yellow_phase = False
+                    yellow_phase_step_count = 0
             # Update green phase counter
-            if green_phase:
+            elif green_phase:
                 # print('update green phase counter')
                 green_phase_step_count += 1
+                # Reset green phase
+                if green_phase_step_count == GREEN_PHASE_DURATION:
+                    # print('reset green phase count')
+                    green_phase = False
+                    green_phase_step_count = 0
+                elif green_phase_step_count == 1:
+                    # print('do things')
+                    next_state, current_waiting_time, intersection_queue, vehicles_arrived = self.get_state(junction_id)
+                    reward = self.get_reward(vehicles_arrived, current_waiting_time)
+                    done = self.is_done(step, max_steps)
+                    # Feed agent memory
+                    self.agent.remember(state, action, reward, next_state, done)
 
-            # Reset green phase
-            if green_phase_step_count == GREEN_PHASE_DURATION:
-                # print('reset green phase count')
-                green_phase = False
-                green_phase_step_count = 0
+                    # Update
+                    state = next_state
+                    cumulative_reward += reward
+                    cumulative_waiting_time += current_waiting_time
+                    throughput += vehicles_arrived
+                    cumulative_intersection_queue += intersection_queue
 
-            traci.simulationStep(step)
-
-            if green_phase == True and (green_phase_step_count in (1, GREEN_PHASE_DURATION)):
-                # print('do things')
-                next_state, current_waiting_time, intersection_queue, vehicles_arrived = self.get_state(junction_id)
-                reward = self.get_reward(vehicles_arrived, current_waiting_time)
-                done = self.is_done(step, max_steps)
-                # Feed agent memory
-                self.agent.remember(state, action, reward, next_state, done)
-
-                # Update
-                state = next_state
-                cumulative_reward += reward
-                cumulative_waiting_time += current_waiting_time
-                throughput += vehicles_arrived
-                cumulative_intersection_queue += intersection_queue
-
-                # Train agent
-                if len(self.agent.memory) >= 32:
-                    self.agent.replay(batch_size)
+                    # Train agent
+                    if len(self.agent.memory) >= 32:
+                        self.agent.replay(batch_size)
 
         print("Total reward: {}, Eps: {}".format(cumulative_reward, self.agent.epsilon))
 

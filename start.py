@@ -1,20 +1,20 @@
-#!/usr/bin/python3
+#!/anaconda3/bin/python
 
-from generate_routefile import generate_routefile
-from plot_stats import plot_stats
-from simulator import Simulator
-from agent import DQNAgent
 import os
 import sys
 import gc
 import time
+from generate_routefile import generate_routefile
+from plot_stats import plot_stats
+from simulator import Simulator
+from agent import DQNAgent
 
 # to kill warning about tensorflow
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # main entry point
 if __name__ == "__main__":
-    EPISODES = 1000
+    EPISODES = 1
     MAX_STEPS = 3600
     # sumocfg = "environment/model.sumocfg"
     SUMOCFG = "environment/tlcs_config_test.sumocfg"
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     GUI = False
 
     # Agent hyperparameters
-    STATE_SIZE = 200
+    STATE_SIZE = 80
     ACTION_SIZE = 4
     MEMORY_SIZE = 200
     GAMMA = 0.95
@@ -34,10 +34,10 @@ if __name__ == "__main__":
     NAME = 'DQNAgent'
 
     # Stats
-    reward_store = []
-    avg_wait_store = []
-    throughput_store = []
-    avg_intersection_queue_store = []
+    REWARD_STORE = []
+    AVG_WAIT_STORE = []
+    THROUGHPUT_STORE = []
+    AVG_INTERSECTION_QUEUE_STORE = []
 
     # Create DQNAgent
     AGENT = DQNAgent(
@@ -64,10 +64,10 @@ if __name__ == "__main__":
         cumulative_reward, avg_waiting_time, avg_intersection_queue, throughput = SIM.run(gui=GUI, max_steps=MAX_STEPS)
         del SIM
 
-        reward_store.append(cumulative_reward)
-        avg_wait_store.append(avg_waiting_time)
-        throughput_store.append(throughput)
-        avg_intersection_queue_store.append(avg_intersection_queue)
+        REWARD_STORE.append(cumulative_reward)
+        AVG_WAIT_STORE.append(avg_waiting_time)
+        THROUGHPUT_STORE.append(throughput)
+        AVG_INTERSECTION_QUEUE_STORE.append(avg_intersection_queue)
 
         elapsed_time = round(time.time() - start_time, 2)
         print("----- Elapsed time: ", elapsed_time, " seconds -----")
@@ -77,6 +77,6 @@ if __name__ == "__main__":
     del AGENT
     gc.collect()
 
-    plot_stats(reward_store, avg_wait_store, throughput_store, avg_intersection_queue_store)
+    plot_stats(REWARD_STORE, AVG_WAIT_STORE, THROUGHPUT_STORE, AVG_INTERSECTION_QUEUE_STORE)
 
     sys.stdout.flush()
