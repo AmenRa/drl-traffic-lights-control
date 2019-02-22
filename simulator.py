@@ -105,7 +105,7 @@ def compute_queue_and_total_waiting_time(vehicle):
         if vehicle[1][122] > 0.5:
             in_queue = True
 
-    return in_queue, waiting_time, vehicle_position
+    return in_queue, waiting_time, vehicle_position, valid_car
 
 class Simulator:
     def __init__(self, sumocfg, tripinfo, state_size, agent):
@@ -120,8 +120,9 @@ class Simulator:
         total_waiting_time = 0
         state = np.zeros(self.state_size)
         intersection_queue = 0
+        vehicles_arrived = 0
         # number of cars arrived in the last step
-        vehicles_arrived = traci.simulation.getArrivedNumber()
+        # vehicles_arrived = traci.simulation.getArrivedNumber()
 
         if subscription_results is not None:
             # for vehicle in subscription_results.items():
@@ -192,21 +193,21 @@ class Simulator:
             #             intersection_queue += 1
             #             total_waiting_time += vehicle[1][122]
 
-            in_queues, waiting_times, vehicle_positions = zip(*map(compute_queue_and_total_waiting_time, subscription_results.items()))
+            in_queues, waiting_times, vehicle_positions, valid_cars = zip(*map(compute_queue_and_total_waiting_time, subscription_results.items()))
 
             total_waiting_time = reduce(operator.add, waiting_times)
             intersection_queue = reduce(operator.add, in_queues)
-            # for vehicle_position in vehicle_positions:
-            #     if vehicle_position > -1:
-            #         state[vehicle_position] = 1
+            vehicles_arrived = reduce(operator.add, valid_cars)
+            for vehicle_position in vehicle_positions:
+                if vehicle_position > -1:
+                    state[vehicle_position] = 1
 
-        # Transpose the state in order to feed it into the NN
-        state = np.reshape(state, [1, self.state_size])
+        # return state, total_waiting_time, intersection_queue, vehicles_arrived
         return state, total_waiting_time, intersection_queue, vehicles_arrived
 
     # Calculate reward
     def get_reward(self, vehicles_arrived, current_waiting_time):
-        return vehicles_arrived - current_waiting_time
+        return (10 * vehicles_arrived) - current_waiting_time
 
     # Check if the episode is finished (not very useful here, but often used in Reinforcement Learning tasks)
     def is_done(self, step, max_steps):
@@ -251,7 +252,7 @@ class Simulator:
         previous_action = None
 
         for step in range(max_steps):
-            # print(step)
+            start_time = time.time()
 
             # Choose action and (start yellow phase or execute action)
             if not green_phase and not yellow_phase:
@@ -321,7 +322,7 @@ class Simulator:
 
         print("Total reward: {}, Eps: {}".format(cumulative_reward, self.agent.epsilon))
 
-        traci.close()
+        traci.close(False)
 
         # Return the stats for this episode
         avg_waiting_time = cumulative_waiting_time / max_steps

@@ -1,4 +1,4 @@
-#!/anaconda3/bin/python
+#!/usr/bin/python3
 
 import os
 import sys
@@ -14,8 +14,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # main entry point
 if __name__ == "__main__":
-    EPISODES = 1
-    MAX_STEPS = 3600
+    EPISODES = 300
+    MAX_STEPS = 5400
     # sumocfg = "environment/model.sumocfg"
     SUMOCFG = "environment/tlcs_config_test.sumocfg"
     # sumocfg = "environment/tlcs_config_train.sumocfg"
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     MEMORY_SIZE = 200
     GAMMA = 0.95
     EPSILON = 1.0
-    EPSILON_DECAY_RATE = 0.99999
+    EPSILON_DECAY_RATE = 0.9999
     EPSILON_MIN = 0.01
     LEARNING_RATE = 0.0002
     NAME = 'DQNAgent'
@@ -53,11 +53,11 @@ if __name__ == "__main__":
     )
 
     for episode in range(EPISODES):
-        print('********************')
+        print('\n')
         print("----- Starting episode: ", episode)
         start_time = time.time()
         # Generate routefile dynamically
-        generate_routefile(max_steps=MAX_STEPS, seed=42)
+        generate_routefile(max_steps=MAX_STEPS, seed=episode)
         # Create Simulator
         SIM = Simulator(sumocfg=SUMOCFG, tripinfo=TRIPINFO, state_size=STATE_SIZE, agent=AGENT)
         # Run simulator
@@ -71,7 +71,6 @@ if __name__ == "__main__":
 
         elapsed_time = round(time.time() - start_time, 2)
         print("----- Elapsed time: ", elapsed_time, " seconds -----")
-        print('********************')
 
     AGENT.save()
     del AGENT
