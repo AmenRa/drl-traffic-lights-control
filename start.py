@@ -52,6 +52,7 @@ if __name__ == "__main__":
     for episode in range(EPISODES):
         print('\n')
         print("----- Starting episode: ", episode)
+        AGENT.epsilon = EPSILON - (episode / EPISODES)
         start_time = time.time()
         # Generate routefile dynamically
         generate_routefile(max_steps=MAX_STEPS, seed=episode)

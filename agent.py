@@ -58,8 +58,9 @@ class DQNAgent:
         model.add(Dense(512, input_dim=self.state_size, activation='relu'))
         model.add(Dense(256, activation='relu'))
         model.add(Dense(128, activation='relu'))
+        model.add(Dense(64, activation='relu'))
         model.add(Dense(32, activation='relu'))
-        model.add(Dense(self.action_size, activation='linear'))
+        model.add(Dense(self.action_size, activation='relu'))
 
         model.compile(
             # optimizer=SGD(lr=self.learning_rate),
@@ -129,8 +130,8 @@ class DQNAgent:
         )
 
         # Decrease epsilon
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay_rate
+        # if self.epsilon > self.epsilon_min:
+        #     self.epsilon *= self.epsilon_decay_rate
 
     # Load a pre-trained model
     def load(self):
