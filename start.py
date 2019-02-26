@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/anaconda3/bin/python
 
 import os
 import sys
@@ -14,8 +14,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # main entry point
 if __name__ == "__main__":
-    EPISODES = 300
-    MAX_STEPS = 5400
+    EPISODES = 3
+    MAX_STEPS = 100
     # sumocfg = "environment/model.sumocfg"
     SUMOCFG = "environment/tlcs_config_test.sumocfg"
     # sumocfg = "environment/tlcs_config_train.sumocfg"

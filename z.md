@@ -28,10 +28,10 @@ Experiments:
   3. cumulated waiting time per | lane traci.lane.getWaitingTime(self, laneID)
   4. tls state or previous action
 
-2. State (blocks):
-  1. number of cars per block going to the tls
-  2. avarage speed per block
-  3. cumulated waiting time per block
+2. State (cells):
+  1. number of cars per cell going to the tls
+  2. avarage speed per cell
+  3. cumulated waiting time per cell
   4. tls state or previous action
 
 3. Network:
