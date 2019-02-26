@@ -26,6 +26,7 @@ Experiments:
   1. number of cars per cell going to the tls
   2. avarage speed per cell
   3. cumulated waiting time per cell
+  4. number of cars queued per cell
   4. tls state or previous action
 
 3. Network:

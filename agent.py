@@ -3,7 +3,7 @@ import random
 from collections import deque
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, GRU
 from keras.optimizers import Adam
 from keras.backend.tensorflow_backend import set_session
 
@@ -55,11 +55,11 @@ class DQNAgent:
         # Create a sequntial model (a sequential model is a linear stack of layers)
         model = Sequential()
 
-        model.add(Dense(64, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(512, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(256, activation='relu'))
+        model.add(Dense(128, activation='relu'))
         model.add(Dense(32, activation='relu'))
-        model.add(Dense(16, activation='relu'))
-        model.add(Dense(10, activation='relu'))
-        model.add(Dense(self.action_size, activation='relu'))
+        model.add(Dense(self.action_size, activation='linear'))
 
         model.compile(
             # optimizer=SGD(lr=self.learning_rate),

@@ -27,133 +27,157 @@ GREEN_PHASE_DURATION = 31
 YELLOW_PHASE_DURATION = 6
 
 # phase codes based on xai_tlcs.net.xml
-PHASE_NS_GREEN = 0 # action 0 code 00
+PHASE_NS_GREEN = 0
 PHASE_NS_YELLOW = 1
-PHASE_NSL_GREEN = 2 # action 1 code 01
+PHASE_NSL_GREEN = 2
 PHASE_NSL_YELLOW = 3
-PHASE_EW_GREEN = 4 # action 2 code 10
+PHASE_EW_GREEN = 4
 PHASE_EW_YELLOW = 5
-PHASE_EWL_GREEN = 6 # action 3 code 11
+PHASE_EWL_GREEN = 6
 PHASE_EWL_YELLOW = 7
-
-def compute_queue_and_total_waiting_time(vehicle):
-    in_queue = False
-    waiting_time = vehicle[1][122]
-    # Lane position
-    lane_pos = vehicle[1][86]
-    # Lane ID
-    lane_id = vehicle[1][81]
-    # Lanes are 750m long, this calculate the distance from the tls
-    distance_from_tls = 750 - lane_pos
-    # Lane group initialization
-    lane_group = -1
-    # Flag to leave out vehicles crossing the intersection or driving away from it
-    valid_car = False
-
-    # In which lane is the car? _3 are the "turn left only" lanes
-    if lane_id in ('W2TL_0', 'W2TL_1', 'W2TL_2'):
-        lane_group = 0
-    elif lane_id == 'W2TL_3':
-        lane_group = 1
-    elif lane_id in ('N2TL_0', 'N2TL_1', 'N2TL_2'):
-        lane_group = 2
-    elif lane_id == 'N2TL_3':
-        lane_group = 3
-    elif lane_id in ('E2TL_0', 'E2TL_1', 'E2TL_2'):
-        lane_group = 4
-    elif lane_id == 'E2TL_3':
-        lane_group = 5
-    elif lane_id in ('S2TL_0', 'S2TL_1', 'S2TL_2'):
-        lane_group = 6
-    elif lane_id == 'S2TL_3':
-        lane_group = 7
-
-    # distance in meters from the TLS -> mapping into cells
-    if distance_from_tls < 7:
-        lane_cell = 0
-    elif distance_from_tls < 14:
-        lane_cell = 1
-    elif distance_from_tls < 21:
-        lane_cell = 2
-    elif distance_from_tls < 28:
-        lane_cell = 3
-    elif distance_from_tls < 40:
-        lane_cell = 4
-    elif distance_from_tls < 60:
-        lane_cell = 5
-    elif distance_from_tls < 100:
-        lane_cell = 6
-    elif distance_from_tls < 160:
-        lane_cell = 7
-    elif distance_from_tls < 400:
-        lane_cell = 8
-    elif distance_from_tls <= 750:
-        lane_cell = 9
-
-    if 1 <= lane_group <= 7:
-        # composition of the two postion ID to create a number in interval 0-79
-        vehicle_position = int(str(lane_group) + str(lane_cell))
-        valid_car = True
-    elif lane_group == 0:
-        vehicle_position = lane_cell
-        valid_car = True
-    else:
-        vehicle_position = -1
-
-    if valid_car:
-        # Heuristic to capture with precision when a car is really in queue
-        if vehicle[1][122] > 0.5:
-            in_queue = True
-
-    return in_queue, waiting_time, vehicle_position, valid_car
 
 
 class Simulator:
+
     def __init__(self, sumocfg, tripinfo, state_size, agent):
         self.sumocfg = sumocfg
         self.tripinfo = tripinfo
         self.state_size = state_size
         self.agent = agent
 
+    def _compute_current_waiting_time(self, junction_id):
+        subscription_results = traci.junction.getContextSubscriptionResults(junction_id)
+        if subscription_results is not None:
+            vehicles = subscription_results.items()
+            return reduce(operator.add, map(lambda x: x[1][122], vehicles))
+        return 0
+
+    def _compute_reward(self, current_waiting_time, step):
+        # Do not track first 100 steps
+        if step < 100:
+            return 0
+        if current_waiting_time > 0:
+            return 1 / current_waiting_time
+        return 1
+
     def _compute_throughput(self):
         return traci.simulation.getArrivedNumber()
 
-    def sum_vectors_elementwise(self, v1, v2):
-        return v1 + v2
-
-    def get_state(self, junction_id):
+    def _compute_queue(self, junction_id):
         subscription_results = traci.junction.getContextSubscriptionResults(junction_id)
+        queue = 0
+        if subscription_results is not None:
+            vehicles = subscription_results.items()
+            queue = reduce(operator.add, map(lambda x: x[1][122] > 0.5, vehicles))
+        return queue
 
+    def _compute_position_index(self, vehicle):
+        # Initialize vehicle_position_index as -1 in order to not taking into account vehicles driving away from the tls later
+        vehicle_position_index = -1
+        # Lane position
+        lane_pos = vehicle[1][86]
+        # Lane ID
+        lane_id = vehicle[1][81]
+        # Lanes are 750m long, this calculate the distance from the tls
+        distance_from_tls = 750 - lane_pos
+        # Lane group initialization
+        lane_group = -1
+        # In which lane is the car? _3 are the "turn left only" lanes
+        if '_3' in lane_id:
+            if lane_id == 'W2TL_3':
+                lane_group = 1
+            elif lane_id == 'N2TL_3':
+                lane_group = 3
+            elif lane_id == 'E2TL_3':
+                lane_group = 5
+            elif lane_id == 'S2TL_3':
+                lane_group = 7
+        else:
+            if 'W2TL' in lane_id:
+                lane_group = 0
+            elif 'N2TL' in lane_id:
+                lane_group = 2
+            elif 'E2TL' in lane_id:
+                lane_group = 4
+            elif 'S2TL' in lane_id:
+                lane_group = 6
+
+        # distance in meters from the TLS -> mapping into cells
+        if distance_from_tls < 7:
+            lane_cell = 0
+        elif distance_from_tls < 14:
+            lane_cell = 1
+        elif distance_from_tls < 21:
+            lane_cell = 2
+        elif distance_from_tls < 28:
+            lane_cell = 3
+        elif distance_from_tls < 40:
+            lane_cell = 4
+        elif distance_from_tls < 60:
+            lane_cell = 5
+        elif distance_from_tls < 100:
+            lane_cell = 6
+        elif distance_from_tls < 160:
+            lane_cell = 7
+        elif distance_from_tls < 400:
+            lane_cell = 8
+        elif distance_from_tls <= 750:
+            lane_cell = 9
+
+        if 0 <= lane_group <= 7:
+            # composition of the two postion ID to create a number in the interval 0-79
+            vehicle_position_index = int(str(lane_group) + str(lane_cell))
+
+        return vehicle_position_index
+
+    def _compute_car_state(self, vehicle):
+        # Save the position of the vehicle as a point (vector) in a multi-dimensional space for faster computations
+        position = np.zeros(80)
+        # Save the speed of the vehicle as a point (vector) in a multi-dimensional space for faster computations
+        speed = np.zeros(80)
+        # Save the waiting_time of the vehicle as a point (vector) in a multi-dimensional space for faster computations
+        waiting_time = np.zeros(80)
+        # Save the queue_status of the vehicle as a point (vector) in a multi-dimensional space for faster computations
+        queue_status = np.zeros(80)
+
+        vehicle_position_index = self._compute_position_index(vehicle)
+
+        # Do not consider vehicles driving away from the tls
+        if vehicle_position_index > -1:
+            position[vehicle_position_index] = 1
+            speed[vehicle_position_index] = vehicle[1][64]
+            waiting_time[vehicle_position_index] = vehicle[1][122]
+            if vehicle[1][122] > 0.5:
+                queue_status[vehicle_position_index] = 1
+
+        return position, speed, waiting_time, queue_status
+
+    def _get_state(self, junction_id):
+        subscription_results = traci.junction.getContextSubscriptionResults(junction_id)
         state = np.zeros(self.state_size)
-        current_cumulated_waiting_time = 0
-        current_queue = 0
-        current_throughput = 0
 
         if subscription_results is not None:
             vehicles = subscription_results.items()
 
-            in_queues, waiting_times, vehicle_positions, valid_cars = zip(*map(compute_queue_and_total_waiting_time, vehicles))
+            positions, speeds, waiting_times, queue_statuses = zip(*map(self._compute_car_state, vehicles))
 
-            current_cumulated_waiting_time = reduce(operator.add, waiting_times)
-            current_queue = reduce(operator.add, in_queues)
-            # current_throughput = self._compute_throughput(vehicles)
-            for vehicle_position in vehicle_positions:
-                if vehicle_position > -1:
-                    state[vehicle_position] = 1
+            # number of cars per cell going to the tls
+            cars_per_cell = reduce(np.add, positions)
+            # avarage speed per cell
+            avarage_speed_per_cell = reduce(lambda x, y: np.mean([x, y], axis=0), positions)
+            # cumulated waiting time per cell
+            cumulated_waiting_time_per_cell = reduce(np.add, positions)
+            # number of cars queued per cell
+            queue_per_cell = reduce(np.add, queue_statuses)
+            # tls phase
+            tls_phase = np.array([traci.trafficlight.getPhase("TL")])
 
-        return state, current_cumulated_waiting_time, current_queue, current_throughput
+            state = np.concatenate([cars_per_cell, avarage_speed_per_cell, cumulated_waiting_time_per_cell, queue_per_cell, tls_phase])
 
-    # Calculate reward
-    def get_reward(self, step, current_waiting_time):
-        if current_waiting_time > 0:
-            return 1 / current_waiting_time
-        # Avoid to return 1 in the first steps when no vehicles are near the tls
-        if step < 50:
-            return 0
-        return 1
+        return state
 
     # Check if the episode is finished (not very useful here, but often used in Reinforcement Learning tasks)
-    def is_done(self, step, max_steps):
+    def _is_done(self, step, max_steps):
         return step < max_steps - 1
 
     # Run simulation (TraCI/SUMO)
@@ -171,12 +195,12 @@ class Simulator:
 
         # The following code retrieves all vehicle speeds and waiting times within range (50m) of a junction (the vehicle ids are retrieved implicitly). (The values retrieved are always the ones from the last time step, it is not possible to retrieve older values.)
         # add tc.VAR_ACCUMULATED_WAITING_TIME, tc.VAR_POSITION if more than one tl
-        traci.junction.subscribeContext(junction_id, tc.CMD_GET_VEHICLE_VARIABLE, 1000, [tc.VAR_LANEPOSITION, tc.VAR_LANE_ID, tc.VAR_WAITING_TIME])
-        # tc.VAR_SPEED, tc.VAR_WAITING_TIME,
-        # 86 : VAR_LANEPOSITION
-        # 81 : E2TL_0
-        # 122 : VAR_WAITING_TIME
-        # 121 : VAR_ARRIVED_VEHICLES_NUMBER
+        traci.junction.subscribeContext(junction_id, tc.CMD_GET_VEHICLE_VARIABLE, 1000, [tc.VAR_SPEED, tc.VAR_LANEPOSITION, tc.VAR_LANE_ID, tc.VAR_WAITING_TIME])
+        # VAR_LANEPOSITION = 86
+        # VAR_LANE_ID = 81
+        # VAR_WAITING_TIME = 122
+        # VAR_ARRIVED_VEHICLES_NUMBER = 121
+        # VAR_SPEED = 64
 
         # stats
         cumulative_reward = 0
@@ -184,7 +208,7 @@ class Simulator:
         throughput = 0
         cumulative_intersection_queue = 0
 
-        state, previous_waiting_time, intersection_queue, current_throughput = self.get_state(junction_id)
+        state = self._get_state(junction_id)
 
         yellow_phase = False
         green_phase = False
@@ -244,17 +268,17 @@ class Simulator:
                     green_phase_step_count = 0
                 elif green_phase_step_count == 1:
                     # print('do things')
-                    next_state, current_waiting_time, intersection_queue, current_throughput = self.get_state(junction_id)
-                    reward = self.get_reward(step, current_waiting_time)
-                    done = self.is_done(step, max_steps)
+                    next_state = self._get_state(junction_id)
+                    current_waiting_time = self._compute_current_waiting_time(junction_id)
+                    reward = self._compute_reward(current_waiting_time, step)
+                    done = self._is_done(step, max_steps)
                     # Feed agent memory
                     self.agent.remember(state, action, reward, next_state, done)
-
                     # Update
                     state = next_state
                     cumulative_reward += reward
                     cumulative_waiting_time += current_waiting_time
-                    cumulative_intersection_queue += intersection_queue
+                    cumulative_intersection_queue += self._compute_queue(junction_id)
 
                     # Train agent
                     if len(self.agent.memory) >= 32:

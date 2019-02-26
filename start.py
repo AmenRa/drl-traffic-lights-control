@@ -10,8 +10,8 @@ from agent import DQNAgent
 
 # main entry point
 if __name__ == "__main__":
-    EPISODES = 5
-    MAX_STEPS = 300
+    EPISODES = 1000
+    MAX_STEPS = 3600
     # sumocfg = "environment/model.sumocfg"
     SUMOCFG = "environment/tlcs_config_test.sumocfg"
     # sumocfg = "environment/tlcs_config_train.sumocfg"
@@ -20,12 +20,12 @@ if __name__ == "__main__":
     GUI = False
 
     # Agent hyperparameters
-    STATE_SIZE = 80
+    STATE_SIZE = 321
     ACTION_SIZE = 4
     MEMORY_SIZE = 200
     GAMMA = 0.95
     EPSILON = 1.0
-    EPSILON_DECAY_RATE = 0.9999
+    EPSILON_DECAY_RATE = 0.99999
     EPSILON_MIN = 0.01
     LEARNING_RATE = 0.0002
     NAME = 'DQNAgent'
