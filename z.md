@@ -4,12 +4,6 @@
 ```
 
 
-
-
-
-
-
-
 Environment Variables:
 1. Green Phase Duration: 31 sec (same as SUMO)
 2. Yellow Phase Duration: 6 sec (same as SUMO)

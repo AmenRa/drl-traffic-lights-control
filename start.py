@@ -1,6 +1,5 @@
-#!/anaconda3/bin/python
+#!/usr/bin/python3
 
-import os
 import sys
 import gc
 import time
@@ -9,17 +8,15 @@ from plot_stats import plot_stats
 from simulator import Simulator
 from agent import DQNAgent
 
-# to kill warning about tensorflow
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 # main entry point
 if __name__ == "__main__":
-    EPISODES = 3
-    MAX_STEPS = 100
+    EPISODES = 5
+    MAX_STEPS = 300
     # sumocfg = "environment/model.sumocfg"
     SUMOCFG = "environment/tlcs_config_test.sumocfg"
     # sumocfg = "environment/tlcs_config_train.sumocfg"
     TRIPINFO = "environment/tripinfo.xml"
+    # GUI = False
     GUI = False
 
     # Agent hyperparameters

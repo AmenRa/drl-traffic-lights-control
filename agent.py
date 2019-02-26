@@ -1,9 +1,24 @@
+import os
 import random
 from collections import deque
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.optimizers import SGD, Adam
+from keras.optimizers import Adam
+from keras.backend.tensorflow_backend import set_session
+
+# Keras GPU utilization settings
+import tensorflow as tf
+# Avoid warning about tensorflow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+config = tf.ConfigProto()
+# dynamically grow the memory used on the GPU
+config.gpu_options.allow_growth = True
+# To log device placement (on which device the operation ran)
+# config.log_device_placement = True
+sess = tf.Session(config=config)
+# set this TensorFlow session as the default session for Keras
+set_session(sess)
 
 '''
 state_size                  Size of the input
@@ -19,6 +34,7 @@ name                        The name used to save the model
 # Reduce epsilon (because we need less and less exploration)
 epsilon = min_epsilon + (max_epsilon - min_epsilon)*np.exp(-epsilon_decay_rate*episode)
 '''
+
 
 class DQNAgent:
 

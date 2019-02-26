@@ -21,10 +21,10 @@ import traci
 import traci.constants as tc
 # pylint: enable=E0401,C0413
 
-from plot_stats import plot_stats
-
-GREEN_PHASE_DURATION = 10 # duration of green phase
-YELLOW_PHASE_DURATION = 4 # duration of yellow phase
+# Duration of green phase
+GREEN_PHASE_DURATION = 31
+# Duration of yellow phase
+YELLOW_PHASE_DURATION = 6
 
 # phase codes based on xai_tlcs.net.xml
 PHASE_NS_GREEN = 0 # action 0 code 00
@@ -45,10 +45,28 @@ def compute_queue_and_total_waiting_time(vehicle):
     lane_id = vehicle[1][81]
     # Lanes are 750m long, this calculate the distance from the tls
     distance_from_tls = 750 - lane_pos
-    # Lane griup initialization
+    # Lane group initialization
     lane_group = -1
     # Flag to leave out vehicles crossing the intersection or driving away from it
     valid_car = False
+
+    # In which lane is the car? _3 are the "turn left only" lanes
+    if lane_id in ('W2TL_0', 'W2TL_1', 'W2TL_2'):
+        lane_group = 0
+    elif lane_id == 'W2TL_3':
+        lane_group = 1
+    elif lane_id in ('N2TL_0', 'N2TL_1', 'N2TL_2'):
+        lane_group = 2
+    elif lane_id == 'N2TL_3':
+        lane_group = 3
+    elif lane_id in ('E2TL_0', 'E2TL_1', 'E2TL_2'):
+        lane_group = 4
+    elif lane_id == 'E2TL_3':
+        lane_group = 5
+    elif lane_id in ('S2TL_0', 'S2TL_1', 'S2TL_2'):
+        lane_group = 6
+    elif lane_id == 'S2TL_3':
+        lane_group = 7
 
     # distance in meters from the TLS -> mapping into cells
     if distance_from_tls < 7:
@@ -72,24 +90,6 @@ def compute_queue_and_total_waiting_time(vehicle):
     elif distance_from_tls <= 750:
         lane_cell = 9
 
-    # In which lane is the car? _3 are the "turn left only" lanes
-    if lane_id in ('W2TL_0', 'W2TL_1', 'W2TL_2'):
-        lane_group = 0
-    elif lane_id == 'W2TL_3':
-        lane_group = 1
-    elif lane_id in ('N2TL_0', 'N2TL_1', 'N2TL_2'):
-        lane_group = 2
-    elif lane_id == 'N2TL_3':
-        lane_group = 3
-    elif lane_id in ('E2TL_0', 'E2TL_1', 'E2TL_2'):
-        lane_group = 4
-    elif lane_id == 'E2TL_3':
-        lane_group = 5
-    elif lane_id in ('S2TL_0', 'S2TL_1', 'S2TL_2'):
-        lane_group = 6
-    elif lane_id == 'S2TL_3':
-        lane_group = 7
-
     if 1 <= lane_group <= 7:
         # composition of the two postion ID to create a number in interval 0-79
         vehicle_position = int(str(lane_group) + str(lane_cell))
@@ -107,6 +107,7 @@ def compute_queue_and_total_waiting_time(vehicle):
 
     return in_queue, waiting_time, vehicle_position, valid_car
 
+
 class Simulator:
     def __init__(self, sumocfg, tripinfo, state_size, agent):
         self.sumocfg = sumocfg
@@ -114,100 +115,42 @@ class Simulator:
         self.state_size = state_size
         self.agent = agent
 
+    def _compute_throughput(self):
+        return traci.simulation.getArrivedNumber()
+
+    def sum_vectors_elementwise(self, v1, v2):
+        return v1 + v2
+
     def get_state(self, junction_id):
         subscription_results = traci.junction.getContextSubscriptionResults(junction_id)
 
-        total_waiting_time = 0
         state = np.zeros(self.state_size)
-        intersection_queue = 0
-        vehicles_arrived = 0
-        # number of cars arrived in the last step
-        # vehicles_arrived = traci.simulation.getArrivedNumber()
+        current_cumulated_waiting_time = 0
+        current_queue = 0
+        current_throughput = 0
 
         if subscription_results is not None:
-            # for vehicle in subscription_results.items():
-            #     # Lane position
-            #     lane_pos = vehicle[1][86]
-            #     # Lane ID
-            #     lane_id = vehicle[1][81]
-            #     # Lanes are 750m long, this calculate the distance from the tls
-            #     distance_from_tls = 750 - lane_pos
-            #     # Lane griup initialization
-            #     lane_group = -1
-            #     # Flag to leave out vehicles crossing the intersection or driving away from it
-            #     valid_car = False
-            #
-            #     # distance in meters from the TLS -> mapping into cells
-            #     if distance_from_tls < 7:
-            #         lane_cell = 0
-            #     elif distance_from_tls < 14:
-            #         lane_cell = 1
-            #     elif distance_from_tls < 21:
-            #         lane_cell = 2
-            #     elif distance_from_tls < 28:
-            #         lane_cell = 3
-            #     elif distance_from_tls < 40:
-            #         lane_cell = 4
-            #     elif distance_from_tls < 60:
-            #         lane_cell = 5
-            #     elif distance_from_tls < 100:
-            #         lane_cell = 6
-            #     elif distance_from_tls < 160:
-            #         lane_cell = 7
-            #     elif distance_from_tls < 400:
-            #         lane_cell = 8
-            #     elif distance_from_tls <= 750:
-            #         lane_cell = 9
-            #
-            #     # In which lane is the car? _3 are the "turn left only" lanes
-            #     if lane_id in ('W2TL_0', 'W2TL_1', 'W2TL_2'):
-            #         lane_group = 0
-            #     elif lane_id == 'W2TL_3':
-            #         lane_group = 1
-            #     elif lane_id in ('N2TL_0', 'N2TL_1', 'N2TL_2'):
-            #         lane_group = 2
-            #     elif lane_id == 'N2TL_3':
-            #         lane_group = 3
-            #     elif lane_id in ('E2TL_0', 'E2TL_1', 'E2TL_2'):
-            #         lane_group = 4
-            #     elif lane_id == 'E2TL_3':
-            #         lane_group = 5
-            #     elif lane_id in ('S2TL_0', 'S2TL_1', 'S2TL_2'):
-            #         lane_group = 6
-            #     elif lane_id == 'S2TL_3':
-            #         lane_group = 7
-            #
-            #     if 1 <= lane_group <= 7:
-            #         # composition of the two postion ID to create a number in interval 0-79
-            #         veh_position = int(str(lane_group) + str(lane_cell))
-            #         valid_car = True
-            #     elif lane_group == 0:
-            #         veh_position = lane_cell
-            #         valid_car = True
-            #
-            #     if valid_car:
-            #         # Write the position of the car veh_id in the state array
-            #         state[veh_position] = 1
-            #         # Heuristic to capture with precision when a car is really in queue
-            #         if vehicle[1][122] > 0.5:
-            #             intersection_queue += 1
-            #             total_waiting_time += vehicle[1][122]
+            vehicles = subscription_results.items()
 
-            in_queues, waiting_times, vehicle_positions, valid_cars = zip(*map(compute_queue_and_total_waiting_time, subscription_results.items()))
+            in_queues, waiting_times, vehicle_positions, valid_cars = zip(*map(compute_queue_and_total_waiting_time, vehicles))
 
-            total_waiting_time = reduce(operator.add, waiting_times)
-            intersection_queue = reduce(operator.add, in_queues)
-            vehicles_arrived = reduce(operator.add, valid_cars)
+            current_cumulated_waiting_time = reduce(operator.add, waiting_times)
+            current_queue = reduce(operator.add, in_queues)
+            # current_throughput = self._compute_throughput(vehicles)
             for vehicle_position in vehicle_positions:
                 if vehicle_position > -1:
                     state[vehicle_position] = 1
 
-        # return state, total_waiting_time, intersection_queue, vehicles_arrived
-        return state, total_waiting_time, intersection_queue, vehicles_arrived
+        return state, current_cumulated_waiting_time, current_queue, current_throughput
 
     # Calculate reward
-    def get_reward(self, vehicles_arrived, current_waiting_time):
-        return (10 * vehicles_arrived) - current_waiting_time
+    def get_reward(self, step, current_waiting_time):
+        if current_waiting_time > 0:
+            return 1 / current_waiting_time
+        # Avoid to return 1 in the first steps when no vehicles are near the tls
+        if step < 50:
+            return 0
+        return 1
 
     # Check if the episode is finished (not very useful here, but often used in Reinforcement Learning tasks)
     def is_done(self, step, max_steps):
@@ -241,7 +184,7 @@ class Simulator:
         throughput = 0
         cumulative_intersection_queue = 0
 
-        state, previous_waiting_time, intersection_queue, vehicles_arrived = self.get_state(junction_id)
+        state, previous_waiting_time, intersection_queue, current_throughput = self.get_state(junction_id)
 
         yellow_phase = False
         green_phase = False
@@ -252,8 +195,6 @@ class Simulator:
         previous_action = None
 
         for step in range(max_steps):
-            start_time = time.time()
-
             # Choose action and (start yellow phase or execute action)
             if not green_phase and not yellow_phase:
                 # Let the agent choose action
@@ -303,8 +244,8 @@ class Simulator:
                     green_phase_step_count = 0
                 elif green_phase_step_count == 1:
                     # print('do things')
-                    next_state, current_waiting_time, intersection_queue, vehicles_arrived = self.get_state(junction_id)
-                    reward = self.get_reward(vehicles_arrived, current_waiting_time)
+                    next_state, current_waiting_time, intersection_queue, current_throughput = self.get_state(junction_id)
+                    reward = self.get_reward(step, current_waiting_time)
                     done = self.is_done(step, max_steps)
                     # Feed agent memory
                     self.agent.remember(state, action, reward, next_state, done)
@@ -313,12 +254,13 @@ class Simulator:
                     state = next_state
                     cumulative_reward += reward
                     cumulative_waiting_time += current_waiting_time
-                    throughput += vehicles_arrived
                     cumulative_intersection_queue += intersection_queue
 
                     # Train agent
                     if len(self.agent.memory) >= 32:
                         self.agent.replay(batch_size)
+
+            throughput += self._compute_throughput()
 
         print("Total reward: {}, Eps: {}".format(cumulative_reward, self.agent.epsilon))
 
