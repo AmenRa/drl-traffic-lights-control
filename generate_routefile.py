@@ -3,7 +3,7 @@ import math
 
 
 # generation of routes of cars
-def generate_routefile(max_steps, seed):
+def generate_routefile(max_steps, seed, mode):
     # make tests reproducible
     np.random.seed(seed)
 
@@ -14,22 +14,22 @@ def generate_routefile(max_steps, seed):
     new_mode = False
 
     # low density
-    if seed % 4 == 0:
+    if mode == 'low':
         n_cars_generated = 600
         low_mode = True
         print("Mode: low")
         # high density
-    elif seed % 4 == 1:
+    elif mode == 'high':
         n_cars_generated = 6000
         standard_mode = True
         print("Mode: high")
         # main source is north/south
-    elif seed % 4 == 2:
+    elif mode == 'north-south':
         n_cars_generated = 3000
         ns_mode = True
         print("Mode: north-south main")
         # main source is east/west
-    elif seed % 4 == 3:
+    elif mode == 'east-west':
         n_cars_generated = 3000
         new_mode = True
         print("Mode: east-west main")
@@ -51,7 +51,7 @@ def generate_routefile(max_steps, seed):
     car_gen_steps = np.rint(car_gen_steps)
 
     # produce the file for cars generation, one car per line
-    route_file_path = 'environment/tlcs_train.rou.xml'
+    route_file_path = 'environments/' + mode + '/tlcs_train.rou.xml'
     routes_file = open(route_file_path, 'w')
     routes_file.write('''<routes>
     <vType accel="1.0" decel="4.5" id="standard_car" length="5.0" minGap="2.5" maxSpeed="25" sigma="0.5" />

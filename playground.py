@@ -1,9 +1,15 @@
+#!/usr/bin/python3
+import time
 import numpy as np
+import random
+import requests
+from ast import literal_eval
+from functools import reduce
+import math
 
-phase = np.array([0, 0])
-print(phase)
 
-x = 'hello'
-y = 'll'
-z = 'a'
-print(y or z in x)
+def sigmoid(x):
+  return 1 / (1 + math.exp(-x))
+
+
+print(sigmoid(0.123))
