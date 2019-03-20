@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 # generation of routes of cars
 def generate_routefile(max_steps, seed):
     # make tests reproducible
@@ -12,19 +13,23 @@ def generate_routefile(max_steps, seed):
     ns_mode = False
     new_mode = False
 
-    if seed % 4 == 0: # low density
+    # low density
+    if seed % 4 == 0:
         n_cars_generated = 600
         low_mode = True
         print("Mode: low")
-    elif seed % 4 == 1: # high density
+        # high density
+    elif seed % 4 == 1:
         n_cars_generated = 6000
         standard_mode = True
         print("Mode: high")
-    elif seed % 4 == 2: # main source is north/south
+        # main source is north/south
+    elif seed % 4 == 2:
         n_cars_generated = 3000
         ns_mode = True
         print("Mode: north-south main")
-    elif seed % 4 == 3:  # main source is east/west
+        # main source is east/west
+    elif seed % 4 == 3:
         n_cars_generated = 3000
         new_mode = True
         print("Mode: east-west main")
@@ -79,8 +84,10 @@ def generate_routefile(max_steps, seed):
                     routes_file.write('    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
                 else:
                     routes_file.write('    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
-            else: # car that turn -25% of the time the car turns
-                route_turn = np.random.randint(1, 9) # choose random source source & destination
+            # car that turn -25% of the time the car turns
+            else:
+                # choose random source source & destination
+                route_turn = np.random.randint(1, 9)
                 if route_turn == 1:
                     routes_file.write('    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
                 elif route_turn == 2:
@@ -100,24 +107,35 @@ def generate_routefile(max_steps, seed):
 
     if ns_mode:
         for car_counter, step in enumerate(car_gen_steps):
-            straight_or_turn = np.random.uniform() # car goes straight or turns
-            source = np.random.uniform() # choose the source
-            destination_straight = np.random.uniform() # destination if the car goes straight
-            destination_turn = np.random.randint(1, 5) # destination if the car turns
+            # car goes straight or turns
+            straight_or_turn = np.random.uniform()
+            # choose the source
+            source = np.random.uniform()
+            # destination if the car goes straight
+            destination_straight = np.random.uniform()
+            # destination if the car turns
+            destination_turn = np.random.randint(1, 5)
+            # choose source: N S or E W
             if straight_or_turn < 0.75:
-                if source < 0.90: # choose source: N S or E W
-                    if destination_straight < 0.5: # choose destination
+                # choose destination
+                if source < 0.90:
+                    if destination_straight < 0.5:
                         routes_file.write('    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
                     else:
                         routes_file.write('    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
-                else: # source: E W
-                    if destination_straight < 0.5: # choose destination
+                # source: E W
+                else:
+                    # choose destination
+                    if destination_straight < 0.5:
                         routes_file.write('    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
                     else:
                         routes_file.write('    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
-            else: # behavior: turn
-                if source < 0.90: # choose source: N S or E W
-                    if destination_turn == 1: # choose destination
+            # behavior: turn
+            else:
+                # choose source: N S or E W
+                if source < 0.90:
+                    # choose destination
+                    if destination_turn == 1:
                         routes_file.write('    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
                         routes_file.write('    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
@@ -125,8 +143,10 @@ def generate_routefile(max_steps, seed):
                         routes_file.write('    <vehicle id="S_W_%i" type="standard_car" route="S_W" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 4:
                         routes_file.write('    <vehicle id="S_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
-                else: # source: E W
-                    if destination_turn == 1: # choose destination
+                # source: E W
+                else:
+                    # choose destination
+                    if destination_turn == 1:
                         routes_file.write('    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
                         routes_file.write('    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
@@ -141,20 +161,28 @@ def generate_routefile(max_steps, seed):
             source = np.random.uniform()
             destination_straight = np.random.uniform()
             destination_turn = np.random.randint(1, 5)
-            if straight_or_turn < 0.75: # choose behavior: straight or turn
-                if source < 0.90: # choose source: N S or E W
-                    if destination_straight < 0.5: # choose destination
+            # choose behavior: straight or turn
+            if straight_or_turn < 0.75:
+                # choose source: N S or E W
+                if source < 0.90:
+                    # choose destination
+                    if destination_straight < 0.5:
                         routes_file.write('    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
                     else:
                         routes_file.write('    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
-                else: # source: N S
-                    if destination_straight < 0.5: # choose destination
+                # source: N S
+                else:
+                    # choose destination
+                    if destination_straight < 0.5:
                         routes_file.write('    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
                     else:
                         routes_file.write('    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
-            else: # behavior: turn
-                if source < 0.90: # choose source: N S or E W
-                    if destination_turn == 1: # choose destination
+            # behavior: turn
+            else:
+                # choose source: N S or E W
+                if source < 0.90:
+                    # choose destination
+                    if destination_turn == 1:
                         routes_file.write('    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
                         routes_file.write('    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
@@ -162,8 +190,10 @@ def generate_routefile(max_steps, seed):
                         routes_file.write('    <vehicle id="E_N_%i" type="standard_car" route="E_N" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 4:
                         routes_file.write('    <vehicle id="E_S_%i" type="standard_car" route="E_S" depart="%s" />' % (car_counter, step))
-                else: # source: N S
-                    if destination_turn == 1: # choose destination
+                # source: N S
+                else:
+                    # choose destination
+                    if destination_turn == 1:
                         routes_file.write('    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
                         routes_file.write('    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
