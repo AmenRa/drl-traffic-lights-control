@@ -267,6 +267,8 @@ class Simulator:
             # Store previous action
             self.previous_action = self.action
             # Choose action
+            if (self.states.shape[0] == 321):
+                self.states = self.states.reshape(1, 321)
             self.action = requests.post('http://127.0.0.1:5000/act', json={'states': self.states.tolist()}).json()['action']
             # Start yellow phase
             if self.action != self.previous_action and self.previous_action is not None:

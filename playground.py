@@ -8,11 +8,10 @@ from functools import reduce
 import math
 import random
 
+next_states = np.random.rand(3, 2, 2)
 
-def sigmoid(x):
-  return 1 / (1 + math.exp(-x))
+print(next_states)
 
+next_states = np.delete(next_states, 0, 0)
 
-print(sigmoid(0.123))
-
-print(random.randrange(4))
+print(next_states)
