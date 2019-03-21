@@ -38,14 +38,14 @@ if __name__ == "__main__":
 
     # Agent hyperparameters
     STATE_SIZE = 321
-    ACTION_SIZE = 4
-    MEMORY_SIZE = 500
-    GAMMA = 0.95
+    # ACTION_SIZE = 4
+    # MEMORY_SIZE = 500
+    # GAMMA = 0.95
     EPSILON = 1.0
-    EPSILON_DECAY_RATE = 0.99999
-    EPSILON_MIN = 0.01
-    LEARNING_RATE = 0.0002
-    BATCH_SIZE = 32
+    # EPSILON_DECAY_RATE = 0.99999
+    # EPSILON_MIN = 0.01
+    # LEARNING_RATE = 0.0002
+    # BATCH_SIZE = 32
     NAME = 'GRU_Swish_DQNAgent'
 
     # Stats
@@ -73,22 +73,6 @@ if __name__ == "__main__":
             jobs.append(p)
             p.start()
 
-        # p_low = mp.Process(target=simulate, args=('low', STATE_SIZE, 'ciao', MAX_STEPS, episode, return_dict))
-        # jobs.append(p_low)
-        # p_low.start()
-
-        # p_high = mp.Process(target=simulate, args=('high', STATE_SIZE, 'ciao', MAX_STEPS, episode, return_dict))
-        # jobs.append(p_high)
-        # p_high.start()
-        #
-        # p_north_south = mp.Process(target=simulate, args=('north-south', STATE_SIZE, 'ciao', MAX_STEPS, episode, return_dict))
-        # jobs.append(p_north_south)
-        # p_north_south.start()
-        #
-        # p_east_west = mp.Process(target=simulate, args=('east-west', STATE_SIZE, 'ciao', MAX_STEPS, episode, return_dict))
-        # jobs.append(p_east_west)
-        # p_east_west.start()
-
         for proc in jobs:
             proc.join()
 
@@ -104,7 +88,7 @@ if __name__ == "__main__":
         elapsed_time = round(time.time() - start_time, 2)
         print("----- Elapsed time: ", elapsed_time, " seconds -----")
 
-        if (episode + 1) % 50 == 0:
+        if (episode + 1) % 10 == 0:
             requests.post('http://127.0.0.1:5000/save')
             with open('history/gru_swish_REWARD_STORE.out', 'wb') as f:
                 pickle.dump(REWARD_STORE, f)

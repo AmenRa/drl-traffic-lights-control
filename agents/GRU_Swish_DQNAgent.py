@@ -3,7 +3,7 @@ import random
 from collections import deque
 import numpy as np
 from keras.models import Sequential, Model
-from keras.layers import Dense, CuDNNLSTM, Dropout, Add, Input
+from keras.layers import Dense, CuDNNLSTM, Dropout, Add, Input, BatchNormalization
 from keras.optimizers import Adam, RMSprop
 from keras.backend.tensorflow_backend import set_session
 from keras import backend as K
@@ -79,16 +79,16 @@ class DQNAgent:
 
         # Define other layers
         # x = Dense(512, activation='relu')(x)
-        x = Dense(256, activation='relu')(x)
+        x = Dense(256, activation=swish)(x)
         # x = Dropout(0.1)(x)
-        x = Dense(256, activation='relu')(x)
+        x = Dense(256, activation=swish)(x)
         x = Dropout(0.1)(x)
-        x = Dense(128, activation='relu')(x)
+        x = Dense(128, activation=swish)(x)
         # x = Dropout(0.1)(x)
         # x = Dense(64, activation='relu')(x)
         # x = Dropout(0.1)(x)
         # x = Dense(32, activation='relu')(x)
-        output_layer = Dense(self.action_size, activation='sigmoid')(x)
+        output_layer = Dense(self.action_size, activation='tanh')(x)
 
         # Create model
         model = Model(inputs=[cells_input, lts_phase_input], outputs=output_layer)
@@ -158,9 +158,15 @@ class DQNAgent:
 
             current_q_values[action] = reward + self.gamma * np.amax(next_state_q_values)
 
+            if current_q_values[action] > 1:
+                current_q_values[action] = 1
+            # elif current_q_values[action] < 0:
+            #     current_q_values[action] = 0
+            elif current_q_values[action] < -1:
+                current_q_values[action] = -1
+
             # print(current_q_values[action])
             # print('- - - - -')
-
 
         # import sys
         # sys.exit("Error message")
@@ -171,7 +177,7 @@ class DQNAgent:
         history = self.model.fit(
             x=[cells_states, tls_phase_states],
             y=currents_q_values,
-            epochs=30,
+            epochs=10,
             verbose=0,
             batch_size=self.batch_size
         )

@@ -6,6 +6,7 @@ import requests
 from ast import literal_eval
 from functools import reduce
 import math
+import random
 
 
 def sigmoid(x):
@@ -13,3 +14,5 @@ def sigmoid(x):
 
 
 print(sigmoid(0.123))
+
+print(random.randrange(4))
