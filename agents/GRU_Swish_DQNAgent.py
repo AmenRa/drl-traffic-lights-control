@@ -52,7 +52,6 @@ class DQNAgent:
         self.batch_size = batch_size
         self.name = name
         self.model = self._build_model()
-        # self.graph = tf.get_default_graph()
 
     # Declare the model architecture and build the model
     def _build_model(self):
