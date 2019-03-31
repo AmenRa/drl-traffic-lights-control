@@ -19,7 +19,7 @@ import traci.constants as tc
 # pylint: enable=E0401,C0413
 
 # Duration of green phase
-GREEN_PHASE_DURATION = 31
+GREEN_PHASE_DURATION = 21
 # Duration of yellow phase
 YELLOW_PHASE_DURATION = 6
 
@@ -34,6 +34,17 @@ PHASE_EWL_GREEN = 6
 PHASE_EWL_YELLOW = 7
 
 
+def extract_waiting_time(vehicle):
+    # Return the waiting time only for the vehicle in queue
+    if vehicle[1][122] > 0.5:
+        return vehicle[1][122]
+    return 0
+
+
+def is_queued(vehicle):
+    return vehicle[1][122] > 0.5
+
+
 class Simulator:
 
     def __init__(self, sumocfg):
@@ -43,16 +54,8 @@ class Simulator:
         subscription_results = traci.junction.getContextSubscriptionResults(junction_id)
         if subscription_results is not None:
             vehicles = subscription_results.items()
-            return reduce(operator.add, map(lambda x: x[1][122], vehicles))
+            return reduce(operator.add, map(extract_waiting_time, vehicles))
         return 0
-
-    def _compute_reward(self, current_waiting_time, step):
-        # Do not track first 100 steps
-        if step < 100:
-            return 0
-        if current_waiting_time > 0:
-            return 1 / current_waiting_time
-        return 1
 
     def _compute_throughput(self):
         return traci.simulation.getArrivedNumber()
@@ -62,7 +65,7 @@ class Simulator:
         queue = 0
         if subscription_results is not None:
             vehicles = subscription_results.items()
-            queue = reduce(operator.add, map(lambda x: x[1][122] > 0.5, vehicles))
+            queue = reduce(operator.add, map(is_queued, vehicles))
         return queue
 
     # Check if the episode is finished (not very useful here, but often used in Reinforcement Learning tasks)
@@ -70,7 +73,7 @@ class Simulator:
         return step < max_steps - 1
 
     # Run simulation (TraCI/SUMO)
-    def run(self, gui=False, max_steps=100, batch_size=32):
+    def run(self, gui=False, max_steps=100):
         # Control SUMO mode (with or without GUI)
         if gui:
             sumo_binary = checkBinary('sumo-gui')
@@ -98,16 +101,16 @@ class Simulator:
 
         for step in range(max_steps):
             # Do step
-            traci.simulationStep(step)
+            traci.simulationStep(float(step))
             # Update metrics
             throughput += self._compute_throughput()
             cumulative_intersection_queue += self._compute_queue(junction_id)
             cumulative_waiting_time += self._compute_current_waiting_time(junction_id)
 
-        traci.close(False)
-
         # Return the stats for this episode
         avg_waiting_time = cumulative_waiting_time / max_steps
         avg_intersection_queue = cumulative_intersection_queue / max_steps
+
+        traci.close(False)
 
         return avg_waiting_time, avg_intersection_queue, throughput

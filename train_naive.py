@@ -12,8 +12,8 @@ from simulators.simulator_naive import Simulator as Simulator_Naive
 if __name__ == "__main__":
     EPISODES = 2000
     MAX_STEPS = 3600
-    SUMOCFG = "environment/tlcs_config_train.sumocfg"
-    GUI = False
+    SUMOCFG = "environments/high/tlcs_config_test.sumocfg"
+    GUI = True
 
     # Stats
     REWARD_STORE = []
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         print("----- Starting episode: ", episode)
         start_time = time.time()
         # Generate routefile dynamically
-        generate_routefile(max_steps=MAX_STEPS, seed=episode)
+        generate_routefile(max_steps=MAX_STEPS, seed=episode, mode='high')
         # Create Simulator_Naive
         SIM = Simulator_Naive(sumocfg=SUMOCFG)
         # Run simulator

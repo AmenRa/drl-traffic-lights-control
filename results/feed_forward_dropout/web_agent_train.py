@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify
 import numpy as np
 import time
-from agents.Swish_DQNAgent import DQNAgent as Swish_DQNAgent
+from DQNAgent import DQNAgent
 
 # Disable non-error logs
 import logging
@@ -22,10 +22,10 @@ EPSILON_MIN = 0.01
 LEARNING_RATE = 0.0002
 SAMPLE_SIZE = 128
 BATCH_SIZE = 32
-NAME = 'Swish_DQNAgent'
+NAME = 'DQNAgent'
 
-# Create Swish_DQNAgent
-Swish_DQNAgent = Swish_DQNAgent(
+# Create DQNAgent
+DQNAgent = DQNAgent(
     state_size=STATE_SIZE,
     action_size=ACTION_SIZE,
     memory_size=MEMORY_SIZE,
@@ -42,14 +42,14 @@ Swish_DQNAgent = Swish_DQNAgent(
 
 @app.route('/memory_length', methods=['GET'])
 def memory_length():
-    memory_length = len(Swish_DQNAgent.memory)
+    memory_length = len(DQNAgent.memory)
     return jsonify(memory_length=memory_length)
 
 
 @app.route('/update_epsilon', methods=['POST'])
 def update_epsilon():
     epsilon = request.get_json()['epsilon']
-    Swish_DQNAgent.epsilon = epsilon
+    DQNAgent.epsilon = epsilon
     return 'ok'
 
 
@@ -60,29 +60,29 @@ def remember():
     reward = request.get_json()['reward']
     next_state = np.array(request.get_json()['next_state'])
     done = request.get_json()['done']
-    Swish_DQNAgent.remember(state, action, reward, next_state, done)
+    DQNAgent.remember(state, action, reward, next_state, done)
     return 'ok'
 
 
 @app.route('/replay', methods=['POST'])
 def replay():
-    if len(Swish_DQNAgent.memory) >= SAMPLE_SIZE:
+    if len(DQNAgent.memory) >= SAMPLE_SIZE:
         print("----------------------------------------")
         print("---> Starting experience replay...")
         start_time = time.time()
         losses = []
         accuraces = []
-        # Swish_DQNAgent.replay()
+        # DQNAgent.replay()
         for i in range(0, 100):
-            loss, acc = Swish_DQNAgent.replay()
+            loss, acc = DQNAgent.replay()
             losses.append(sum(loss)/len(loss))
             accuraces.append(sum(acc)/len(acc))
             # print(i, '-', 'Loss:', (sum(loss)/len(loss)), 'Accuracy:', (sum(acc)/len(acc)))
 
-        # losses, accuraces = Swish_DQNAgent.replay()
+        # losses, accuraces = DQNAgent.replay()
         print('--->', 'Loss:', (sum(losses)/len(losses)), 'Accuracy:', (sum(accuraces)/len(accuraces)))
 
-        # print(Swish_DQNAgent.epsilon)
+        # print(DQNAgent.epsilon)
         elapsed_time = round(time.time() - start_time, 2)
         print("---> Experience replay took: ", elapsed_time, " seconds")
         # print("----------------------------------------")
@@ -92,7 +92,7 @@ def replay():
 @app.route('/act', methods=['POST'])
 def act():
     states = np.array(request.get_json()['states'])
-    action = Swish_DQNAgent.act(states)
+    action = DQNAgent.act(states)
     if isinstance(action, (np.integer)):
         action = action.item()
     return jsonify(action=action)
@@ -100,7 +100,7 @@ def act():
 
 @app.route('/save', methods=['POST'])
 def save():
-    Swish_DQNAgent.save()
+    DQNAgent.save()
     return 'ok'
 
 

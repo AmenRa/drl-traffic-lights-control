@@ -130,10 +130,9 @@ def compute_car_state(vehicle):
 
 class Simulator:
 
-    def __init__(self, label, sumocfg, state_size, max_steps, agent='ciao', gui=False):
+    def __init__(self, label, sumocfg, state_size, max_steps, gui=False):
         self.sumocfg = sumocfg
         self.state_size = state_size
-        self.agent = agent
         self.max_steps = max_steps
         # stats
         self.cumulative_reward = 0
@@ -188,11 +187,11 @@ class Simulator:
     # def _compute_reward(self, current_waiting_time, current_queue, step):
     #     reward = 1
     #     if (current_queue > 0):
-    #         average_current_waiting_time = current_waiting_time / current_queue
-    #         if average_current_waiting_time > 20:
+    #         avarage_current_waiting_time = current_waiting_time / current_queue
+    #         if avarage_current_waiting_time > 20:
     #             reward = -1
     #         else:
-    #             reward = (-average_current_waiting_time / 10) + 1
+    #             reward = (-avarage_current_waiting_time / 10) + 1
     #     return reward
     #
     # '''
@@ -236,11 +235,11 @@ class Simulator:
             vehicles = list(filter(lambda x: '2TL' in x[1][81], vehicles))
 
             cars_per_cell = np.zeros(80)
-            average_speed_per_cell = np.zeros(80)
+            avarage_speed_per_cell = np.zeros(80)
             cumulated_waiting_time_per_cell = np.zeros(80)
             queue_per_cell = np.zeros(80)
             cars_per_cell_normalized = np.zeros(80)
-            average_speed_per_cell_normalized = np.zeros(80)
+            avarage_speed_per_cell_normalized = np.zeros(80)
             cumulated_waiting_time_per_cell_normalized = np.zeros(80)
             queue_per_cell_normalized = np.zeros(80)
 
@@ -251,10 +250,10 @@ class Simulator:
                 cars_per_cell = reduce(np.add, positions)
                 if sum(cars_per_cell) > 0:
                     cars_per_cell_normalized = cars_per_cell / sum(cars_per_cell)
-                # average speed per cell / ignore divide by zero warnings
+                # avarage speed per cell / ignore divide by zero warnings
                 with np.errstate(divide='ignore', invalid='ignore'):
-                    average_speed_per_cell = np.nan_to_num(np.divide(reduce(np.add, speeds), cars_per_cell))
-                    average_speed_per_cell_normalized = average_speed_per_cell / 26
+                    avarage_speed_per_cell = np.nan_to_num(np.divide(reduce(np.add, speeds), cars_per_cell))
+                    avarage_speed_per_cell_normalized = avarage_speed_per_cell / 26
                 # cumulated waiting time per cell
                 cumulated_waiting_time_per_cell = reduce(np.add, waiting_times)
                 if sum(cumulated_waiting_time_per_cell) > 0:
@@ -267,9 +266,9 @@ class Simulator:
             # tls phase
             tls_phase = np.array([self.connection.trafficlight.getPhase("TL")])
 
-            state = np.concatenate([cars_per_cell_normalized, average_speed_per_cell_normalized, cumulated_waiting_time_per_cell_normalized, queue_per_cell_normalized])
+            state = np.concatenate([cars_per_cell_normalized, avarage_speed_per_cell_normalized, cumulated_waiting_time_per_cell_normalized, queue_per_cell_normalized])
 
-            # state = np.concatenate([cars_per_cell, average_speed_per_cell, cumulated_waiting_time_per_cell, queue_per_cell, tls_phase])
+            # state = np.concatenate([cars_per_cell, avarage_speed_per_cell, cumulated_waiting_time_per_cell, queue_per_cell, tls_phase])
 
         return state
 
@@ -288,20 +287,20 @@ class Simulator:
             # Start yellow phase
             if self.action != self.previous_action and self.previous_action is not None:
                 self.yellow_phase = True
-                # print('start yellow phase')
-                # yellow phase based on previous action
-                if self.previous_action == 0:
-                    self.connection.trafficlight.setPhase("TL", PHASE_NS_YELLOW)
-                elif self.previous_action == 1:
-                    self.connection.trafficlight.setPhase("TL", PHASE_NSL_YELLOW)
-                elif self.previous_action == 2:
-                    self.connection.trafficlight.setPhase("TL", PHASE_EW_YELLOW)
-                elif self.previous_action == 3:
-                    self.connection.trafficlight.setPhase("TL", PHASE_EWL_YELLOW)
-
+                # Start yellow phase
+                if self.action != self.previous_action and self.previous_action is not None:
+                    self.yellow_phase = True
+                    # yellow phase based on previous action
+                    if self.previous_action == 0:
+                        self.connection.trafficlight.setPhase('TL', PHASE_NS_YELLOW)
+                    elif self.previous_action == 1:
+                        self.connection.trafficlight.setPhase('TL', PHASE_NSL_YELLOW)
+                    elif self.previous_action == 2:
+                        self.connection.trafficlight.setPhase('TL', PHASE_EW_YELLOW)
+                    elif self.previous_action == 3:
+                        self.connection.trafficlight.setPhase('TL', PHASE_EWL_YELLOW)
             # Execute action
             else:
-                # print('start green phase')
                 self.green_phase = True
                 if self.action == 0:
                     self.connection.trafficlight.setPhase("TL", PHASE_NS_GREEN)
@@ -315,6 +314,20 @@ class Simulator:
         # Do step
         self.connection.simulationStep(float(step))
 
+        # Compute stats
+        current_queue = self._compute_queue(self.junction_id)
+        previous_waiting_time = self.current_waiting_time
+        self.current_waiting_time = self._compute_current_waiting_time(self.junction_id)
+        reward = self._compute_reward(self.current_waiting_time, previous_waiting_time, step)
+
+        # Update
+        self.cumulative_reward += reward
+        self.cumulative_waiting_time += self.current_waiting_time
+        self.cumulative_intersection_queue += current_queue
+        self.throughput += self._compute_throughput()
+
+        done = self._is_done(step)
+
         # Update yellow phase counter
         if self.yellow_phase:
             # print('update yellow phase counter')
@@ -324,6 +337,16 @@ class Simulator:
                 # print('reset yellow phase count')
                 self.yellow_phase = False
                 self.yellow_phase_step_count = 0
+                # Start green phase
+                self.green_phase = True
+                if self.action == 0:
+                    self.connection.trafficlight.setPhase("TL", PHASE_NS_GREEN)
+                elif self.action == 1:
+                    self.connection.trafficlight.setPhase("TL", PHASE_NSL_GREEN)
+                elif self.action == 2:
+                    self.connection.trafficlight.setPhase("TL", PHASE_EW_GREEN)
+                elif self.action == 3:
+                    self.connection.trafficlight.setPhase("TL", PHASE_EWL_GREEN)
         # Update green phase counter
         elif self.green_phase:
             # print('update green phase counter')
@@ -333,16 +356,7 @@ class Simulator:
                 # print('reset green phase count')
                 self.green_phase = False
                 self.green_phase_step_count = 0
-            # elif self.green_phase_step_count == 1:
-                # print('do things')
-                current_queue = self._compute_queue(self.junction_id)
 
-                previous_waiting_time = self.current_waiting_time
-                self.current_waiting_time = self._compute_current_waiting_time(self.junction_id)
-
-                reward = self._compute_reward(self.current_waiting_time, previous_waiting_time, step)
-
-                done = self._is_done(step)
                 next_state = self._get_state(self.junction_id)
                 # Feed agent memory
                 requests.post('http://127.0.0.1:5000/remember', json={
@@ -353,13 +367,8 @@ class Simulator:
                     'done': done
                 })
 
-                # Update
+                # Update state
                 self.state = next_state
-                self.cumulative_reward += reward
-                self.cumulative_waiting_time += self.current_waiting_time
-                self.cumulative_intersection_queue += current_queue
-
-        self.throughput += self._compute_throughput()
 
     # end simulation
     def stop(self):
@@ -370,3 +379,8 @@ class Simulator:
         avg_intersection_queue = self.cumulative_intersection_queue / self.max_steps
 
         return self.cumulative_reward, avg_waiting_time, avg_intersection_queue, self.throughput
+
+    def run(self, max_steps):
+        for step in range(0, max_steps):
+            self.do_step(step)
+        return self.stop()
