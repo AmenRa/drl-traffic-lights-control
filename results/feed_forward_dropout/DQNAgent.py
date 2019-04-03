@@ -2,10 +2,11 @@ import os
 import random
 from collections import deque
 import numpy as np
-from keras.models import Sequential, Model
-from keras.layers import Dense, GRU, Dropout, Input
+from keras.models import Model, load_model
+from keras.layers import Dense, Dropout, Input
 from keras.optimizers import Adam
 from keras.backend.tensorflow_backend import set_session
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras import backend as K
 
 # Keras GPU utilization settings
@@ -52,6 +53,12 @@ class DQNAgent:
         self.model = self._build_model()
         self.sample_size = sample_size
         self.batch_size = batch_size
+
+        # self.load_model = False
+
+        self.es = EarlyStopping(monitor='loss', mode='min', verbose=0, patience=3, min_delta=1)
+
+        # self.mc = ModelCheckpoint('best_model.h5', monitor='val_loss', verbose=0, mode='min', save_best_only=True)
 
     # Declare the model architecture and build the model
     def _build_model(self):
@@ -117,6 +124,9 @@ class DQNAgent:
             # elif current_q_values[action] < -1:
             #     current_q_values[action] = -1
 
+        # if self.load_model:
+        #     self.model = load_model('best_model.h5')
+
         # Train the model
         history = self.model.fit(
             x=states,
@@ -124,10 +134,14 @@ class DQNAgent:
             epochs=200,
             verbose=0,
             batch_size=self.batch_size
+            # validation_split=0.1,
+            # callbacks=[self.es]
         )
 
         loss = history.history['loss']
         acc = history.history['acc']
+
+        # self.load_model = True
 
         return loss, acc
 

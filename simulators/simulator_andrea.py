@@ -185,36 +185,6 @@ class Simulator:
     def _compute_reward(self, current_waiting_time, previous_waiting_time, step):
         return previous_waiting_time - current_waiting_time
 
-    # def _compute_reward(self, current_waiting_time, current_queue, step):
-    #     reward = 1
-    #     if (current_queue > 0):
-    #         average_current_waiting_time = current_waiting_time / current_queue
-    #         if average_current_waiting_time > 20:
-    #             reward = -1
-    #         else:
-    #             reward = (-average_current_waiting_time / 10) + 1
-    #     return reward
-    #
-    # '''
-    # DESMOS
-    #
-    # \left\{0\ \le x\ \le\ 10:-\left(ax^2+bx\ +\ c\right),x\ >\ 10:ax^2+bx\ +\ c\right\}
-    #
-    # a=-0.01
-    # b=0.2
-    # c=-1
-    #
-    # y\ =-\frac{1}{10}x\ +\ 1
-    # '''
-
-    # def _compute_reward(self, current_waiting_time, step):
-    #     # Do not track first 100 steps
-    #     if step < 100:
-    #         return 0
-    #     if current_waiting_time > 0:
-    #         return 1 / current_waiting_time
-    #     return 1
-
     def _compute_throughput(self):
         return self.connection.simulation.getArrivedNumber()
 

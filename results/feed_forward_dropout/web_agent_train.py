@@ -22,7 +22,7 @@ EPSILON_MIN = 0.01
 LEARNING_RATE = 0.0002
 SAMPLE_SIZE = 128
 BATCH_SIZE = 32
-NAME = 'DQNAgent'
+NAME = 'ffdo_DQNAgent'
 
 # Create DQNAgent
 DQNAgent = DQNAgent(
