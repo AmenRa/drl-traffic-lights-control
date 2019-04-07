@@ -134,6 +134,7 @@ class Simulator:
         self.sumocfg = sumocfg
         self.state_size = state_size
         self.max_steps = max_steps
+        self.sampling_count = 0
         # stats
         self.cumulative_reward = 0
         self.cumulative_waiting_time = 0
@@ -329,6 +330,7 @@ class Simulator:
                 self.cumulative_reward += reward
                 self.cumulative_waiting_time += self.current_waiting_time
                 self.cumulative_intersection_queue += current_queue
+                self.sampling_count += 1
 
         self.throughput += self._compute_throughput()
 
@@ -337,8 +339,8 @@ class Simulator:
         self.connection.close(False)
 
         # Return the stats for this episode
-        avg_waiting_time = self.cumulative_waiting_time / self.max_steps
-        avg_intersection_queue = self.cumulative_intersection_queue / self.max_steps
+        avg_waiting_time = self.cumulative_waiting_time / self.sampling_count
+        avg_intersection_queue = self.cumulative_intersection_queue / self.sampling_count
 
         return self.cumulative_reward, avg_waiting_time, avg_intersection_queue, self.throughput
 
