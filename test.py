@@ -5,7 +5,7 @@ import gc
 from generate_routefile import generate_routefile
 # Simulators
 from simulators.simulator_naive_2 import Simulator as Simulator_Naive
-from results.feed_forward_dropout.simulator_test import Simulator as Simulator_FFNO
+from feed_forward_dropout.simulator_test import Simulator as Simulator_FFNO
 
 
 def test_naive(sumocfg, gui, state_size, max_steps):

@@ -7,7 +7,7 @@ import pickle
 import requests
 from generate_routefile import generate_routefile
 from plot_stats import plot_stats
-from results.feed_forward_dropout.simulator_train import Simulator
+from feed_forward_dropout.simulator_train import Simulator
 
 import multiprocessing as mp
 
