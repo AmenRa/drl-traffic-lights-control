@@ -5,8 +5,6 @@ import gc
 import time
 import pickle
 import requests
-from ast import literal_eval
-from flask import Flask, request, jsonify
 from generate_routefile import generate_routefile
 from plot_stats import plot_stats
 from results.feed_forward_dropout.simulator_train import Simulator
@@ -45,7 +43,7 @@ if __name__ == "__main__":
     # EPSILON_MIN = 0.01
     # LEARNING_RATE = 0.0002
     # BATCH_SIZE = 32
-    NAME = 'ffdo_DQNAgent'
+    NAME = 'Feed-Forward Dropout DQNAgent'
 
     # Stats
     REWARD_STORE = []
@@ -89,13 +87,13 @@ if __name__ == "__main__":
 
         if (episode + 1) % 10 == 0:
             requests.post('http://127.0.0.1:5000/save')
-            with open('history/ffdo_REWARD_STORE.out', 'wb') as f:
+            with open('history/REWARD_STORE.out', 'wb') as f:
                 pickle.dump(REWARD_STORE, f)
-            with open('history/ffdo_AVG_WAIT_STORE.out', 'wb') as f:
+            with open('history/AVG_WAIT_STORE.out', 'wb') as f:
                 pickle.dump(AVG_WAIT_STORE, f)
-            with open('history/ffdo_THROUGHPUT_STORE.out', 'wb') as f:
+            with open('history/THROUGHPUT_STORE.out', 'wb') as f:
                 pickle.dump(THROUGHPUT_STORE, f)
-            with open('history/ffdo_AVG_INTERSECTION_QUEUE_STORE.out', 'wb') as f:
+            with open('history/AVG_INTERSECTION_QUEUE_STORE.out', 'wb') as f:
                 pickle.dump(AVG_INTERSECTION_QUEUE_STORE, f)
             plot_stats(NAME, REWARD_STORE, AVG_WAIT_STORE, THROUGHPUT_STORE, AVG_INTERSECTION_QUEUE_STORE)
 

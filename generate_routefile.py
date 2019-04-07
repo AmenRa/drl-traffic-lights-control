@@ -77,33 +77,33 @@ def generate_routefile(max_steps, seed, mode):
                 # choose a random source & destination
                 route_straight = np.random.randint(1, 5)
                 if route_straight == 1:
-                    routes_file.write('    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
                 elif route_straight == 2:
-                    routes_file.write('    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
                 elif route_straight == 3:
-                    routes_file.write('    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
                 else:
-                    routes_file.write('    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
             # car that turn -25% of the time the car turns
             else:
                 # choose random source source & destination
                 route_turn = np.random.randint(1, 9)
                 if route_turn == 1:
-                    routes_file.write('    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
                 elif route_turn == 2:
-                    routes_file.write('    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
                 elif route_turn == 3:
-                    routes_file.write('    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
                 elif route_turn == 4:
-                    routes_file.write('    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
                 elif route_turn == 5:
-                    routes_file.write('    <vehicle id="E_N_%i" type="standard_car" route="E_N" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="E_N_%i" type="standard_car" route="E_N" depart="%s" />' % (car_counter, step))
                 elif route_turn == 6:
-                    routes_file.write('    <vehicle id="E_S_%i" type="standard_car" route="E_S" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="E_S_%i" type="standard_car" route="E_S" depart="%s" />' % (car_counter, step))
                 elif route_turn == 7:
-                    routes_file.write('    <vehicle id="S_W_%i" type="standard_car" route="S_W" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="S_W_%i" type="standard_car" route="S_W" depart="%s" />' % (car_counter, step))
                 elif route_turn == 8:
-                    routes_file.write('    <vehicle id="S_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
+                    routes_file.write('\n    <vehicle id="S_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
 
     if ns_mode:
         for car_counter, step in enumerate(car_gen_steps):
@@ -120,40 +120,40 @@ def generate_routefile(max_steps, seed, mode):
                 # choose destination
                 if source < 0.90:
                     if destination_straight < 0.5:
-                        routes_file.write('    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
                     else:
-                        routes_file.write('    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
                 # source: E W
                 else:
                     # choose destination
                     if destination_straight < 0.5:
-                        routes_file.write('    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
                     else:
-                        routes_file.write('    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
             # behavior: turn
             else:
                 # choose source: N S or E W
                 if source < 0.90:
                     # choose destination
                     if destination_turn == 1:
-                        routes_file.write('    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
-                        routes_file.write('    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 3:
-                        routes_file.write('    <vehicle id="S_W_%i" type="standard_car" route="S_W" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="S_W_%i" type="standard_car" route="S_W" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 4:
-                        routes_file.write('    <vehicle id="S_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="S_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
                 # source: E W
                 else:
                     # choose destination
                     if destination_turn == 1:
-                        routes_file.write('    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
-                        routes_file.write('    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 3:
-                        routes_file.write('    <vehicle id="E_N_%i" type="standard_car" route="E_N" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="E_N_%i" type="standard_car" route="E_N" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 4:
-                        routes_file.write('    <vehicle id="E_S_%i" type="standard_car" route="E_S" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="E_S_%i" type="standard_car" route="E_S" depart="%s" />' % (car_counter, step))
 
     if new_mode:
         for car_counter, step in enumerate(car_gen_steps):
@@ -167,40 +167,40 @@ def generate_routefile(max_steps, seed, mode):
                 if source < 0.90:
                     # choose destination
                     if destination_straight < 0.5:
-                        routes_file.write('    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="W_E_%i" type="standard_car" route="W_E" depart="%s" />' % (car_counter, step))
                     else:
-                        routes_file.write('    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="E_W_%i" type="standard_car" route="E_W" depart="%s" />' % (car_counter, step))
                 # source: N S
                 else:
                     # choose destination
                     if destination_straight < 0.5:
-                        routes_file.write('    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="N_S_%i" type="standard_car" route="N_S" depart="%s" />' % (car_counter, step))
                     else:
-                        routes_file.write('    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="S_N_%i" type="standard_car" route="S_N" depart="%s" />' % (car_counter, step))
             # behavior: turn
             else:
                 # choose source: N S or E W
                 if source < 0.90:
                     # choose destination
                     if destination_turn == 1:
-                        routes_file.write('    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="W_N_%i" type="standard_car" route="W_N" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
-                        routes_file.write('    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="W_S_%i" type="standard_car" route="W_S" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 3:
-                        routes_file.write('    <vehicle id="E_N_%i" type="standard_car" route="E_N" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="E_N_%i" type="standard_car" route="E_N" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 4:
-                        routes_file.write('    <vehicle id="E_S_%i" type="standard_car" route="E_S" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="E_S_%i" type="standard_car" route="E_S" depart="%s" />' % (car_counter, step))
                 # source: N S
                 else:
                     # choose destination
                     if destination_turn == 1:
-                        routes_file.write('    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="N_W_%i" type="standard_car" route="N_W" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 2:
-                        routes_file.write('    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="N_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 3:
-                        routes_file.write('    <vehicle id="S_W_%i" type="standard_car" route="S_W" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="S_W_%i" type="standard_car" route="S_W" depart="%s" />' % (car_counter, step))
                     elif destination_turn == 4:
-                        routes_file.write('    <vehicle id="S_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
+                        routes_file.write('\n    <vehicle id="S_E_%i" type="standard_car" route="N_E" depart="%s" />' % (car_counter, step))
 
-    routes_file.write("</routes>")
+    routes_file.write("\n</routes>")
     routes_file.close()
