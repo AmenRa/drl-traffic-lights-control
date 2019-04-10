@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import sys
-import gc
 import time
 import pickle
 import requests
@@ -35,14 +34,7 @@ if __name__ == "__main__":
 
     # Agent hyperparameters
     STATE_SIZE = 320
-    # ACTION_SIZE = 4
-    # MEMORY_SIZE = 500
-    # GAMMA = 0.95
     EPSILON = 1.0
-    # EPSILON_DECAY_RATE = 0.99999
-    # EPSILON_MIN = 0.01
-    # LEARNING_RATE = 0.0002
-    # BATCH_SIZE = 32
     NAME = 'Feed-Forward Dropout DQNAgent'
 
     # Stats

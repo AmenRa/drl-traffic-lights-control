@@ -3,7 +3,7 @@ import random
 from collections import deque
 import numpy as np
 from keras.models import Model
-from keras.layers import Dense, Dropout, Input
+from keras.layers import Dense, CuDNNLSTM, Dropout, Input
 from keras.optimizers import Adam
 from keras.backend.tensorflow_backend import set_session
 
@@ -55,8 +55,9 @@ class DQNAgent:
     # Declare the model architecture and build the model
     def _build_model(self):
 
-        input_layer = Input(shape=(self.state_size, ))
-        x = Dense(512, activation='relu')(input_layer)
+        input_layer = Input(shape=(4, self.state_size, ))
+        x = CuDNNLSTM(units=64)(input_layer)
+        x = Dense(512, activation='relu')(x)
         x = Dense(512, activation='relu')(x)
         x = Dense(512, activation='relu')(x)
         x = Dropout(0.1)(x)
@@ -68,7 +69,6 @@ class DQNAgent:
         model = Model(inputs=input_layer, outputs=output_layer)
 
         model.compile(
-            # optimizer=SGD(lr=self.learning_rate),
             optimizer=Adam(lr=self.learning_rate),
             loss='mse',
             metrics=['accuracy']
@@ -81,13 +81,13 @@ class DQNAgent:
         self.memory.append((state, action, reward, next_state, done))
 
     # Choose an action
-    def act(self, state):
+    def act(self, states):
         # np.random.rand() = random sample from a uniform distribution over [0, 1)
-        if np.random.rand() <= self.epsilon:
+        if np.random.rand() <= self.epsilon or len(states) != 4:
             return random.randrange(self.action_size)
-        # Transpose the state in order to feed it into the model
-        state = state.reshape((1, self.state_size))
-        action_q_values = self.model.predict(state)
+        # Transpose the states in order to feed it into the model
+        states = states.reshape(1, 4, self.state_size)
+        action_q_values = self.model.predict(states)
         return np.argmax(action_q_values[0])
 
     def replay(self):
@@ -99,6 +99,8 @@ class DQNAgent:
         actions = np.asarray([item[1] for item in minibatch])
         rewards = np.asarray([item[2] for item in minibatch])
         next_states = np.asarray([item[3] for item in minibatch])
+
+        print(states.shape)
 
         # Predict the Q-value for each actions of each state
         currents_q_values = self.model.predict(x=states, batch_size=self.batch_size)
@@ -113,7 +115,7 @@ class DQNAgent:
         history = self.model.fit(
             x=states,
             y=currents_q_values,
-            epochs=200,
+            epochs=10,
             verbose=0,
             batch_size=self.batch_size
         )

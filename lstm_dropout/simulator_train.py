@@ -172,7 +172,7 @@ class Simulator:
         # VAR_ARRIVED_VEHICLES_NUMBER = 121
         # VAR_SPEED = 64
 
-        self.state = self._get_state(self.junction_id)
+        self.states = self._get_state(self.junction_id)
 
     def _compute_current_waiting_time(self, junction_id):
         subscription_results = self.connection.junction.getContextSubscriptionResults(junction_id)
@@ -248,7 +248,9 @@ class Simulator:
             # Store previous action
             self.previous_action = self.action
             # Choose action
-            self.action = requests.post('http://127.0.0.1:5000/act', json={'states': self.state.tolist()}).json()['action']
+            if (self.states.shape[0] == 320):
+                self.states = self.states.reshape(1, 320)
+            self.action = requests.post('http://127.0.0.1:5000/act', json={'states': self.states.tolist()}).json()['action']
             # Start yellow phase
             if self.action != self.previous_action and self.previous_action is not None:
                 self.yellow_phase = True
@@ -311,21 +313,24 @@ class Simulator:
                 previous_waiting_time = self.current_waiting_time
                 self.current_waiting_time = self._compute_current_waiting_time(self.junction_id)
                 reward = self._compute_reward(self.current_waiting_time, previous_waiting_time)
-
                 done = self._is_done(step)
-
                 next_state = self._get_state(self.junction_id)
+                next_states = np.vstack((self.states, next_state))
+                if len(next_states) > 4:
+                    # Delete first element
+                    next_states = np.delete(next_states, 0, 0)
                 # Feed agent memory
-                requests.post('http://127.0.0.1:5000/remember', json={
-                    'state': self.state.tolist(),
-                    'action': self.action,
-                    'reward': reward,
-                    'next_state': next_state.tolist(),
-                    'done': done
-                })
+                if len(self.states) == 4:
+                    requests.post('http://127.0.0.1:5000/remember', json={
+                        'state': self.states.tolist(),
+                        'action': self.action,
+                        'reward': reward,
+                        'next_state': next_states.tolist(),
+                        'done': done
+                    })
 
                 # Update
-                self.state = next_state
+                self.states = next_states
                 self.cumulative_reward += reward
                 self.cumulative_waiting_time += self.current_waiting_time
                 self.cumulative_intersection_queue += current_queue
