@@ -7,7 +7,7 @@ saving_folder = 'output_figures/'
 def plot_reward(agent_name, data, mode):
     plt.figure(figsize=(10, 5), dpi=120)
     plt.title(agent_name + ' - ' + mode + ' - Reward')
-    plt.ylabel('Cumulative reward')
+    plt.ylabel('Cumulative Reward')
     plt.xlabel('Episodes')
     # reward
     plt.plot(data)
@@ -18,18 +18,18 @@ def plot_reward(agent_name, data, mode):
 
 def plot_delay(agent_name, data, mode):
     plt.figure(figsize=(10, 5), dpi=120)
-    plt.title(agent_name + ' - ' + mode + ' - Average cumulative delay')
-    plt.ylabel('Average cumulative delay (s)')
+    plt.title(agent_name + ' - ' + mode + ' - Average Cumulative Waiting Time per Step')
+    plt.ylabel('Average Cumulative Waiting Time per Step (s)')
     plt.xlabel('Episodes')
     # average cumulative waiting time
     plt.plot(data)
-    plt.savefig(saving_folder + agent_name + '-' + mode + '-avarage-cumulative-delay.png', bbox_inches='tight')
+    plt.savefig(saving_folder + agent_name + '-' + mode + '-average-cumulative-waiting-time.png', bbox_inches='tight')
     plt.close('all')
 
 
 def plot_throughput(agent_name, data, mode):
     plt.figure(figsize=(10, 5), dpi=120)
-    plt.title(agent_name + ' - ' + mode + ' - Intersection throughput')
+    plt.title(agent_name + ' - ' + mode + ' - Intersection Throughput')
     plt.ylabel('Throughput (vehicles)')
     plt.xlabel('Episodes')
     # num of cars arrived at the end
@@ -40,19 +40,19 @@ def plot_throughput(agent_name, data, mode):
 
 def plot_queue(agent_name, data, mode):
     plt.figure(figsize=(10, 5), dpi=120)
-    plt.title(agent_name + ' - ' + mode + ' - Average intersection queue')
+    plt.title(agent_name + ' - ' + mode + ' - Average Queued Vehicles per Step')
     plt.ylabel('Average queue length (vehicles)')
     plt.xlabel('Episodes')
     # average number of cars in queue
     plt.plot(data)
-    plt.savefig(saving_folder + agent_name + '-' + mode + '-avarage-queue.png', bbox_inches='tight')
+    plt.savefig(saving_folder + agent_name + '-' + mode + '-average-queued-vehicles-per-step.png', bbox_inches='tight')
     plt.close('all')
 
 
 def plot_rewards(agent_name, data):
     plt.figure(figsize=(10, 5), dpi=120)
     plt.title(agent_name + ' - Reward')
-    plt.ylabel('Cumulative reward')
+    plt.ylabel('Cumulative Reward')
     plt.xlabel('Episodes')
     # reward
     plt.plot(data[0::4], label='Low')
@@ -67,8 +67,8 @@ def plot_rewards(agent_name, data):
 
 def plot_delays(agent_name, data):
     plt.figure(figsize=(10, 5), dpi=120)
-    plt.title(agent_name + ' - Average cumulative delay')
-    plt.ylabel('Average cumulative delay (s)')
+    plt.title(agent_name + ' - Average Cumulative Waiting Time per Step')
+    plt.ylabel('Average Cumulative Waiting Time per Step (s)')
     plt.xlabel('Episodes')
     # reward
     plt.plot(data[0::4], label='Low')
@@ -77,13 +77,13 @@ def plot_delays(agent_name, data):
     plt.plot(data[3::4], label='East-West')
     plt.legend()
     # https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html#matplotlib.pyplot.savefig
-    plt.savefig(saving_folder + agent_name + '-avarage-cumulative-delays.png', bbox_inches='tight', dpi=120)
+    plt.savefig(saving_folder + agent_name + '-average-cumulative-waiting-times.png', bbox_inches='tight', dpi=120)
     plt.close('all')
 
 
 def plot_throughputs(agent_name, data):
     plt.figure(figsize=(10, 5), dpi=120)
-    plt.title(agent_name + ' - Intersection throughput')
+    plt.title(agent_name + ' - Intersection Throughput')
     plt.ylabel('Throughput (vehicles)')
     plt.xlabel('Episodes')
     # reward
@@ -99,7 +99,7 @@ def plot_throughputs(agent_name, data):
 
 def plot_queues(agent_name, data):
     plt.figure(figsize=(10, 5), dpi=120)
-    plt.title(agent_name + ' - Average intersection queue')
+    plt.title(agent_name + ' - Average Queued Vehicles per Step')
     plt.ylabel('Average queue length (vehicles)')
     plt.xlabel('Episodes')
     # reward
@@ -109,11 +109,14 @@ def plot_queues(agent_name, data):
     plt.plot(data[3::4], label='East-West')
     plt.legend()
     # https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html#matplotlib.pyplot.savefig
-    plt.savefig(saving_folder + agent_name + '-avarage-queues.png', bbox_inches='tight', dpi=120)
+    plt.savefig(saving_folder + agent_name + '-average-queued-vehicles-per-steps.png', bbox_inches='tight', dpi=120)
     plt.close('all')
 
 
 def plot_stats(agent_name, reward_store, avg_wait_store, throughput_store, avg_intersection_queue_store):
+
+    avg_wait_store = [x * 3600 / 150 for x in avg_wait_store]
+    avg_intersection_queue_store = [x * 3600 / 150 for x in avg_intersection_queue_store]
 
     plot_reward(agent_name, reward_store[0::4], 'Low')
     plot_reward(agent_name, reward_store[1::4], 'High')

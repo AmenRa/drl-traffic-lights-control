@@ -4,16 +4,16 @@ import sys
 import gc
 from generate_routefile import generate_routefile
 # Simulators
-from simulators.simulator_naive_2 import Simulator as Simulator_Naive
+from simulators.simulator_naive import Simulator as Simulator_Naive
 from feed_forward_dropout.simulator_test import Simulator as Simulator_FFNO
 
 
-def test_naive(sumocfg, gui, state_size, max_steps):
+def test_naive(sumocfg, gui, state_size, max_steps, green_phase_duration):
     avg_waiting_time = 0
     avg_intersection_queue = 0
     throughput = 0
     # Create Simulator_Naive
-    sim = Simulator_Naive('naive', sumocfg, max_steps, gui)
+    sim = Simulator_Naive('naive', sumocfg, max_steps, green_phase_duration, gui)
     # Run simulator
     cumulative_reward, avg_waiting_time, avg_intersection_queue, throughput = sim.run(max_steps)
     del sim
@@ -47,11 +47,17 @@ if __name__ == "__main__":
         sumocfg = 'environments/' + mode + '/tlcs_config_train.sumocfg'
         generate_routefile(MAX_STEPS, 666, mode)
 
-        # print('\nMethod: Naive')
-        # avg_waiting_time, avg_intersection_queue, throughput = test_naive(sumocfg, GUI, STATE_SIZE, MAX_STEPS)
-        # w.append(round(avg_waiting_time, 2))
-        # q.append(round(avg_intersection_queue, 2))
-        # t.append(round(throughput, 2))
+        print('\nMethod: Naive 31')
+        avg_waiting_time, avg_intersection_queue, throughput = test_naive(sumocfg, GUI, STATE_SIZE, MAX_STEPS, 31)
+        w.append(round(avg_waiting_time, 2))
+        q.append(round(avg_intersection_queue, 2))
+        t.append(round(throughput, 2))
+
+        print('\nMethod: Naive 21')
+        avg_waiting_time, avg_intersection_queue, throughput = test_naive(sumocfg, GUI, STATE_SIZE, MAX_STEPS, 21)
+        w.append(round(avg_waiting_time, 2))
+        q.append(round(avg_intersection_queue, 2))
+        t.append(round(throughput, 2))
 
         print('\nMethod: Feed-Forward Dropout')
         avg_waiting_time, avg_intersection_queue, throughput = test_ffno(sumocfg, GUI, STATE_SIZE, MAX_STEPS)

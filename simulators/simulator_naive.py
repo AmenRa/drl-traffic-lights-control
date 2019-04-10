@@ -48,9 +48,10 @@ def is_queued(vehicle):
 
 class Simulator:
 
-    def __init__(self, label, sumocfg, max_steps, gui=False):
+    def __init__(self, label, sumocfg, max_steps, green_phase_duration=31, gui=False):
         self.sumocfg = sumocfg
         self.max_steps = max_steps
+        self.green_phase_duration = green_phase_duration
         # stats
         self.cumulative_reward = 0
         self.cumulative_waiting_time = 0
@@ -176,7 +177,7 @@ class Simulator:
             # print('update green phase counter')
             self.green_phase_step_count += 1
             # Reset green phase
-            if self.green_phase_step_count == GREEN_PHASE_DURATION:
+            if self.green_phase_step_count == self.green_phase_duration:
                 # print('reset green phase count')
                 self.green_phase = False
                 self.green_phase_step_count = 0

@@ -54,12 +54,6 @@ class DQNAgent:
         self.sample_size = sample_size
         self.batch_size = batch_size
 
-        # self.load_model = False
-
-        self.es = EarlyStopping(monitor='loss', mode='min', verbose=0, patience=3, min_delta=1)
-
-        # self.mc = ModelCheckpoint('best_model.h5', monitor='val_loss', verbose=0, mode='min', save_best_only=True)
-
     # Declare the model architecture and build the model
     def _build_model(self):
         def swish(x):
@@ -119,14 +113,6 @@ class DQNAgent:
         for current_q_values, action, reward, next_state_q_values in zip(currents_q_values, actions, rewards, next_states_q_values):
             current_q_values[action] = reward + self.gamma * np.amax(next_state_q_values)
 
-            # if current_q_values[action] > 1:
-            #     current_q_values[action] = 1
-            # elif current_q_values[action] < -1:
-            #     current_q_values[action] = -1
-
-        # if self.load_model:
-        #     self.model = load_model('best_model.h5')
-
         # Train the model
         history = self.model.fit(
             x=states,
@@ -134,14 +120,10 @@ class DQNAgent:
             epochs=200,
             verbose=0,
             batch_size=self.batch_size
-            # validation_split=0.1,
-            # callbacks=[self.es]
         )
 
         loss = history.history['loss']
         acc = history.history['acc']
-
-        # self.load_model = True
 
         return loss, acc
 
